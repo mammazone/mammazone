@@ -642,7 +642,7 @@ async function loadPlaces() {
     if (!db) {
       allPlaces = samplePlaces;
     } else {
-      const { data, error } = await db.from('nursing_rooms').select('*');
+      const { data, error } = await db.from('nursing_room').select('*');
       if (error) throw error;
       allPlaces = data && data.length > 0 ? data : samplePlaces;
     }
@@ -798,7 +798,7 @@ async function submitPlace() {
   showLoading(true);
   try {
     if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-      const { error } = await db.from('nursing_rooms').insert([newPlace]);
+      const { error } = await db.from('nursing_room').insert([newPlace]);
       if (error) throw error;
       await loadPlaces();
     } else {
