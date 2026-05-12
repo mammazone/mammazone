@@ -638,7 +638,7 @@ async function loadPlaces() {
     if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
       allPlaces = samplePlaces;
     } else {
-      const { data, error } = await db.from('nursing_rooms').select('*');
+      const { data, error } = await db.from('nursing_room').select('*');
       if (error) throw error;
       allPlaces = data && data.length > 0 ? data : samplePlaces;
     }
