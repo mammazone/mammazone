@@ -5,472 +5,118 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="전국 수유실 정보 공유 지도 - 맘마존. 깨끗하고 편안한 수유실을 지금 바로 찾아보세요." />
   <title>맘마존 – 전국 수유실 지도</title>
-
-  <!-- 카카오맵 대신 Leaflet (무료 OpenStreetMap) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Google Fonts: Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
-
   <style>
     :root {
-      --green: #1D9E75;
-      --green-dark: #0F6E56;
-      --green-light: #E1F5EE;
-      --green-mid: #5DCAA5;
-      --amber: #EF9F27;
-      --coral: #E05A3A;
-      --bg: #F8F9F4;
-      --white: #ffffff;
-      --text: #1a1a1a;
-      --text-muted: #6b7280;
-      --border: rgba(0,0,0,0.08);
-      --shadow-sm: 0 1px 4px rgba(0,0,0,0.08);
-      --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
-      --shadow-lg: 0 8px 40px rgba(0,0,0,0.16);
-      --radius: 16px;
-      --radius-sm: 10px;
+      --green:#1D9E75;--green-dark:#0F6E56;--green-light:#E1F5EE;--green-mid:#5DCAA5;
+      --amber:#EF9F27;--coral:#E05A3A;--bg:#F8F9F4;--white:#ffffff;
+      --text:#1a1a1a;--text-muted:#6b7280;--border:rgba(0,0,0,0.08);
+      --shadow-md:0 4px 20px rgba(0,0,0,0.12);--shadow-lg:0 8px 40px rgba(0,0,0,0.16);
+      --radius:16px;--radius-sm:10px;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    html, body {
-      height: 100%; overflow: hidden;
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
-
-    /* ── 앱 레이아웃 ── */
-    #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
-
-    /* ── 상단 헤더 ── */
-    #header {
-      background: var(--white);
-      padding: 12px 16px 10px;
-      border-bottom: 1px solid var(--border);
-      z-index: 100;
-      flex-shrink: 0;
-    }
-
-    #header-top {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
-    #logo {
-      display: flex; align-items: center; gap: 8px;
-      font-family: 'Do Hyeon', sans-serif;
-      font-size: 22px; font-weight: 400;
-      color: var(--text);
-      letter-spacing: -0.3px;
-    }
-
-    #logo-icon {
-      width: 32px; height: 32px;
-      background: var(--green);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-    }
-
-    #btn-register {
-      display: flex; align-items: center; gap: 5px;
-      background: var(--green);
-      color: white;
-      border: none;
-      border-radius: 20px;
-      padding: 8px 14px;
-      font-size: 13px; font-weight: 500;
-      cursor: pointer;
-      font-family: 'Noto Sans KR', sans-serif;
-      transition: background 0.2s;
-    }
-    #btn-register:active { background: var(--green-dark); transform: scale(0.97); }
-
-    /* 검색창 */
-    #search-wrap {
-      position: relative;
-    }
-    #search-input {
-      width: 100%;
-      padding: 10px 16px 10px 40px;
-      border: 1.5px solid var(--border);
-      border-radius: 24px;
-      font-size: 14px;
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    #search-input:focus { border-color: var(--green-mid); }
-    #search-icon {
-      position: absolute; left: 14px; top: 50%;
-      transform: translateY(-50%);
-      font-size: 16px; color: var(--text-muted);
-      pointer-events: none;
-    }
-
-    /* ── 필터 탭 ── */
-    #filters {
-      background: var(--white);
-      padding: 8px 16px;
-      display: flex; gap: 7px;
-      overflow-x: auto; flex-shrink: 0;
-      border-bottom: 1px solid var(--border);
-      scrollbar-width: none;
-    }
-    #filters::-webkit-scrollbar { display: none; }
-
-    .filter-chip {
-      display: flex; align-items: center; gap: 4px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      font-size: 12px; font-weight: 500;
-      color: var(--text-muted);
-      cursor: pointer; white-space: nowrap;
-      transition: all 0.15s;
-      font-family: 'Noto Sans KR', sans-serif;
-    }
-    .filter-chip.active {
-      background: var(--green-light);
-      border-color: var(--green-mid);
-      color: var(--green-dark);
-    }
-
-    /* ── 지도 ── */
-    #map-wrap { flex: 1; position: relative; overflow: hidden; }
-    #map { width: 100%; height: 100%; }
-
-    /* 수유실 수 배지 */
-    #count-badge {
-      position: absolute; top: 10px; left: 50%;
-      transform: translateX(-50%);
-      z-index: 500;
-      background: var(--white);
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 12px; color: var(--text-muted);
-      box-shadow: var(--shadow-md);
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    #count-badge strong { color: var(--green); font-weight: 700; }
-
-    /* 내 위치 버튼 */
-    #btn-mylocation {
-      position: absolute; bottom: 20px; right: 16px; z-index: 500;
-      width: 44px; height: 44px;
-      background: var(--white);
-      border: none; border-radius: 50%;
-      box-shadow: var(--shadow-md);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px; cursor: pointer;
-      transition: transform 0.15s;
-    }
-    #btn-mylocation:active { transform: scale(0.93); }
-
-    /* 커스텀 마커 */
-    .marker-pin {
-      width: 36px; height: 36px;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      border: 2.5px solid white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      display: flex; align-items: center; justify-content: center;
-    }
-    .marker-emoji {
-      transform: rotate(45deg);
-      font-size: 16px;
-      line-height: 1;
-    }
-
-    /* ── 하단 상세 패널 ── */
-    #detail-panel {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 600;
-      background: var(--white);
-      border-radius: var(--radius) var(--radius) 0 0;
-      box-shadow: var(--shadow-lg);
-      padding: 0 0 env(safe-area-inset-bottom);
-      transform: translateY(110%);
-      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-height: 75vh;
-      overflow-y: auto;
-    }
-    #detail-panel.open { transform: translateY(0); }
-
-    /* 드래그 핸들 */
-    #panel-handle {
-      display: flex; justify-content: center;
-      padding: 12px 0 4px;
-    }
-    #panel-handle::after {
-      content: '';
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-    }
-
-    #panel-content { padding: 4px 20px 24px; }
-
-    #panel-header {
-      display: flex; justify-content: space-between; align-items: flex-start;
-      margin-bottom: 6px;
-    }
-
-    #panel-name {
-      font-size: 18px; font-weight: 700;
-      line-height: 1.3; flex: 1; margin-right: 12px;
-    }
-
-    #btn-close {
-      width: 32px; height: 32px;
-      background: var(--bg);
-      border: none; border-radius: 50%;
-      font-size: 16px; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-
-    #panel-addr {
-      font-size: 13px; color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    /* 평점 */
-    #panel-rating-row {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 14px;
-    }
-    .stars { color: var(--amber); font-size: 15px; letter-spacing: 1px; }
-    .rating-num { font-size: 15px; font-weight: 700; }
-    .review-count { font-size: 12px; color: var(--text-muted); }
-
-    /* 태그들 */
-    #panel-tags {
-      display: flex; flex-wrap: wrap; gap: 6px;
-      margin-bottom: 16px;
-    }
-    .tag {
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px; font-weight: 500;
-    }
-    .tag.green { background: var(--green-light); color: var(--green-dark); }
-    .tag.blue { background: #E6F1FB; color: #185FA5; }
-    .tag.purple { background: #EEEDFE; color: #534AB7; }
-    .tag.amber { background: #FAEEDA; color: #854F0B; }
-    .tag.coral { background: #FAECE7; color: #993C1D; }
-
-    /* 대표 리뷰 */
-    #panel-review-box {
-      background: var(--bg);
-      border-radius: var(--radius-sm);
-      padding: 12px 14px;
-      margin-bottom: 16px;
-      border-left: 3px solid var(--green-mid);
-    }
-    #panel-review-text {
-      font-size: 13px; line-height: 1.7;
-      color: var(--text-muted);
-    }
-
-    /* 액션 버튼 */
-    #panel-actions {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .action-btn {
-      padding: 13px;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      font-size: 13px; font-weight: 500;
-      cursor: pointer; text-align: center;
-      font-family: 'Noto Sans KR', sans-serif;
-      color: var(--text);
-      transition: all 0.15s;
-    }
-    .action-btn:active { transform: scale(0.97); background: var(--bg); }
-    .action-btn.primary {
-      background: var(--green);
-      color: white;
-      border-color: var(--green);
-    }
-    .action-btn.primary:active { background: var(--green-dark); }
-
-    /* ── 등록 모달 ── */
-    #register-modal {
-      display: none;
-      position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.5);
-      align-items: flex-end;
-    }
-    #register-modal.open { display: flex; }
-
-    #register-box {
-      background: var(--white);
-      border-radius: var(--radius) var(--radius) 0 0;
-      padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      animation: slideUp 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-    }
-
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-
-    #register-box h2 {
-      font-size: 18px; font-weight: 700;
-      margin-bottom: 18px;
-    }
-
-    .form-group { margin-bottom: 14px; }
-    .form-label {
-      display: block;
-      font-size: 12px; font-weight: 500;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-    }
-    .form-input, .form-select, .form-textarea {
-      width: 100%;
-      padding: 11px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 14px;
-      font-family: 'Noto Sans KR', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    .form-input:focus, .form-textarea:focus { border-color: var(--green-mid); }
-    .form-textarea { height: 80px; resize: none; }
-
-    .facility-grid {
-      display: grid; grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-    .facility-item {
-      display: flex; align-items: center; gap: 8px;
-      padding: 10px 12px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.15s;
-      font-size: 13px;
-    }
-    .facility-item.checked {
-      background: var(--green-light);
-      border-color: var(--green-mid);
-      color: var(--green-dark);
-      font-weight: 500;
-    }
-    .facility-item input { display: none; }
-
-    .star-rating {
-      display: flex; gap: 6px;
-    }
-    .star-btn {
-      font-size: 28px; cursor: pointer;
-      color: #ddd;
-      transition: color 0.15s, transform 0.1s;
-      background: none; border: none;
-      padding: 0;
-    }
-    .star-btn.active { color: var(--amber); }
-    .star-btn:active { transform: scale(1.2); }
-
-    .modal-actions {
-      display: grid; grid-template-columns: 1fr 2fr;
-      gap: 8px; margin-top: 20px;
-    }
-    .modal-btn {
-      padding: 14px;
-      border-radius: var(--radius-sm);
-      border: 1.5px solid var(--border);
-      background: var(--white);
-      font-size: 14px; font-weight: 500;
-      cursor: pointer;
-      font-family: 'Noto Sans KR', sans-serif;
-      color: var(--text);
-      transition: all 0.15s;
-    }
-    .modal-btn.primary {
-      background: var(--green); color: white; border-color: var(--green);
-    }
-    .modal-btn:active { transform: scale(0.97); }
-
-    /* 로딩 스피너 */
-    #loading {
-      display: none;
-      position: fixed; inset: 0; z-index: 2000;
-      background: rgba(255,255,255,0.85);
-      align-items: center; justify-content: center;
-      flex-direction: column; gap: 12px;
-    }
-    #loading.show { display: flex; }
-    .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--green-light);
-      border-top-color: var(--green);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* 토스트 */
-    #toast {
-      position: fixed; bottom: 80px; left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: #1a1a1a; color: white;
-      padding: 10px 18px; border-radius: 20px;
-      font-size: 13px; font-weight: 500;
-      opacity: 0; transition: all 0.3s;
-      z-index: 3000; white-space: nowrap;
-      pointer-events: none;
-    }
-    #toast.show {
-      opacity: 1; transform: translateX(-50%) translateY(0);
-    }
-
-    /* Leaflet 줌 버튼 위치 조정 */
-    .leaflet-control-zoom {
-      border: none !important;
-      box-shadow: var(--shadow-md) !important;
-    }
-    .leaflet-control-zoom a {
-      border-radius: 8px !important;
-      font-size: 18px !important;
-    }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;overflow:hidden;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);}
+    #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
+    #header{background:var(--white);padding:12px 16px 10px;border-bottom:1px solid var(--border);z-index:100;flex-shrink:0;}
+    #header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    #logo{display:flex;align-items:center;gap:8px;font-family:'Do Hyeon',sans-serif;font-size:22px;color:var(--text);}
+    #logo-icon{width:32px;height:32px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+    #btn-register{display:flex;align-items:center;gap:5px;background:var(--green);color:white;border:none;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+    #btn-register:active{background:var(--green-dark);transform:scale(0.97);}
+    #search-wrap{position:relative;}
+    #search-input{width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--border);border-radius:24px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
+    #search-input:focus{border-color:var(--green-mid);}
+    #search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted);pointer-events:none;}
+    #filters{background:var(--white);padding:8px 16px;display:flex;gap:7px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);scrollbar-width:none;}
+    #filters::-webkit-scrollbar{display:none;}
+    .filter-chip{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
+    .filter-chip.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
+    #map-wrap{flex:1;position:relative;overflow:hidden;}
+    #map{width:100%;height:100%;}
+    #count-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:500;background:var(--white);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-muted);box-shadow:var(--shadow-md);pointer-events:none;white-space:nowrap;}
+    #count-badge strong{color:var(--green);font-weight:700;}
+    #btn-mylocation{position:absolute;bottom:20px;right:16px;z-index:500;width:44px;height:44px;background:var(--white);border:none;border-radius:50%;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;}
+    #detail-panel{position:absolute;bottom:0;left:0;right:0;z-index:600;background:var(--white);border-radius:var(--radius) var(--radius) 0 0;box-shadow:var(--shadow-lg);padding:0 0 env(safe-area-inset-bottom);transform:translateY(110%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);max-height:80vh;overflow-y:auto;}
+    #detail-panel.open{transform:translateY(0);}
+    #panel-handle{display:flex;justify-content:center;padding:12px 0 4px;}
+    #panel-handle::after{content:'';width:36px;height:4px;background:var(--border);border-radius:2px;}
+    #panel-content{padding:4px 20px 24px;}
+    #panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+    #panel-name{font-size:18px;font-weight:700;line-height:1.3;flex:1;margin-right:12px;}
+    #btn-close{width:32px;height:32px;background:var(--bg);border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    #panel-addr{font-size:13px;color:var(--text-muted);margin-bottom:10px;}
+    #panel-verify{display:flex;gap:8px;margin-bottom:8px;}
+    .verify-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;}
+    .verify-btn:active{transform:scale(0.97);}
+    .verify-btn.v-yes{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
+    .verify-btn.v-no{background:#FAECE7;border-color:#E05A3A;color:#993C1D;}
+    #verify-count{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
+    #panel-rating-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+    .stars{color:var(--amber);font-size:15px;letter-spacing:1px;}
+    .rating-num{font-size:15px;font-weight:700;}
+    .review-count{font-size:12px;color:var(--text-muted);}
+    #panel-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+    .tag{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+    .tag.green{background:var(--green-light);color:var(--green-dark);}
+    .tag.blue{background:#E6F1FB;color:#185FA5;}
+    .tag.purple{background:#EEEDFE;color:#534AB7;}
+    .tag.amber{background:#FAEEDA;color:#854F0B;}
+    .tag.coral{background:#FAECE7;color:#993C1D;}
+    .tag.gray{background:#F3F4F6;color:#4B5563;}
+    #panel-photos{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none;}
+    #panel-photos::-webkit-scrollbar{display:none;}
+    .photo-thumb{width:80px;height:80px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;border:1px solid var(--border);}
+    .photo-add{width:80px;height:80px;border-radius:var(--radius-sm);border:1.5px dashed var(--green-mid);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;flex-shrink:0;background:var(--green-light);color:var(--green);}
+    #panel-reviews{margin-bottom:16px;}
+    .review-item{padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid var(--green-mid);}
+    .review-item .r-stars{color:var(--amber);font-size:12px;margin-bottom:4px;}
+    .review-item .r-text{font-size:13px;line-height:1.6;color:var(--text-muted);}
+    .review-item .r-date{font-size:11px;color:#aaa;margin-top:4px;}
+    #no-review{font-size:13px;color:var(--text-muted);padding:12px;text-align:center;background:var(--bg);border-radius:var(--radius-sm);}
+    #panel-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+    .action-btn{padding:12px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+    .action-btn.primary{background:var(--green);color:white;border-color:var(--green);}
+    .action-btn:active{transform:scale(0.97);}
+    .modal-wrap{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);align-items:flex-end;}
+    .modal-wrap.open{display:flex;}
+    .modal-box{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease;}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    .modal-box h2{font-size:18px;font-weight:700;margin-bottom:18px;}
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;}
+    .form-input,.form-textarea{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
+    .form-input:focus,.form-textarea:focus{border-color:var(--green-mid);}
+    .form-textarea{height:80px;resize:none;}
+    .tag-grid{display:flex;flex-wrap:wrap;gap:7px;}
+    .tag-item{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
+    .tag-item.selected{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);font-weight:500;}
+    .star-rating{display:flex;gap:6px;}
+    .star-btn{font-size:28px;cursor:pointer;color:#ddd;background:none;border:none;padding:0;}
+    .star-btn.active{color:var(--amber);}
+    .modal-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:20px;}
+    .modal-btn{padding:14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+    .modal-btn.primary{background:var(--green);color:white;border-color:var(--green);}
+    #loading{display:none;position:fixed;inset:0;z-index:2000;background:rgba(255,255,255,0.85);align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+    #loading.show{display:flex;}
+    .spinner{width:40px;height:40px;border:3px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;z-index:3000;white-space:nowrap;pointer-events:none;}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    .leaflet-control-zoom{border:none!important;box-shadow:var(--shadow-md)!important;}
+    .leaflet-control-zoom a{border-radius:8px!important;}
+    #photo-input{display:none;}
   </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- 헤더 -->
   <div id="header">
     <div id="header-top">
-      <div id="logo">
-        <div id="logo-icon">🍼</div>
-        맘마존
-      </div>
-      <button id="btn-register" onclick="openRegister()">
-        + 수유실 등록
-      </button>
+      <div id="logo"><div id="logo-icon">🍼</div>맘마존</div>
+      <button id="btn-register" onclick="openRegister()">+ 수유실 등록</button>
     </div>
     <div id="search-wrap">
       <span id="search-icon">🔍</span>
@@ -478,24 +124,21 @@
     </div>
   </div>
 
-  <!-- 필터 -->
   <div id="filters">
     <button class="filter-chip active" data-filter="all">전체</button>
-    <button class="filter-chip" data-filter="has_sofa">🛋️ 수유 소파</button>
-    <button class="filter-chip" data-filter="has_diaper">🧷 기저귀 교환대</button>
-    <button class="filter-chip" data-filter="has_hotwater">♨️ 온수기</button>
-    <button class="filter-chip" data-filter="has_sink">🚿 세면대</button>
+    <button class="filter-chip" data-filter="tag_sofa">🛋️ 수유 소파</button>
+    <button class="filter-chip" data-filter="tag_diaper">🧷 기저귀 교환대</button>
+    <button class="filter-chip" data-filter="tag_hotwater">♨️ 온수기</button>
+    <button class="filter-chip" data-filter="tag_private">🤱 프라이빗</button>
+    <button class="filter-chip" data-filter="tag_highchair">🪑 하이체어</button>
+    <button class="filter-chip" data-filter="tag_clean">✨ 청결</button>
   </div>
 
-  <!-- 지도 -->
   <div id="map-wrap">
     <div id="map"></div>
-
     <div id="count-badge">수유실 <strong id="count-num">0</strong>개</div>
+    <button id="btn-mylocation" onclick="goMyLocation()">📍</button>
 
-    <button id="btn-mylocation" onclick="goMyLocation()" title="내 위치로 이동">📍</button>
-
-    <!-- 상세 패널 -->
     <div id="detail-panel">
       <div id="panel-handle"></div>
       <div id="panel-content">
@@ -504,60 +147,66 @@
           <button id="btn-close" onclick="closePanel()">✕</button>
         </div>
         <div id="panel-addr"></div>
+        <div id="panel-verify">
+          <button class="verify-btn v-yes" onclick="verifyPlace(true)">✅ 다녀왔어요</button>
+          <button class="verify-btn v-no" onclick="verifyPlace(false)">❌ 없어졌어요</button>
+        </div>
+        <div id="verify-count"></div>
         <div id="panel-rating-row">
           <span class="stars" id="panel-stars"></span>
           <span class="rating-num" id="panel-rating-num"></span>
           <span class="review-count" id="panel-review-count"></span>
         </div>
         <div id="panel-tags"></div>
-        <div id="panel-review-box">
-          <div id="panel-review-text"></div>
+        <div id="panel-photos">
+          <div class="photo-add" onclick="openPhotoUpload()">📷</div>
         </div>
+        <div id="panel-reviews"></div>
         <div id="panel-actions">
-          <button class="action-btn" onclick="writeReview()">✏️ 리뷰 쓰기</button>
-          <button class="action-btn primary" onclick="navigate()">🧭 길 안내</button>
+          <button class="action-btn" onclick="openReview()">✏️ 리뷰</button>
+          <button class="action-btn" onclick="openTagAdd()">🏷️ 태그</button>
+          <button class="action-btn primary" onclick="navigate()">🧭 길안내</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- 등록 모달 -->
-<div id="register-modal">
-  <div id="register-box">
+<!-- 수유실 등록 모달 -->
+<div class="modal-wrap" id="register-modal">
+  <div class="modal-box">
     <h2>🍼 수유실 등록하기</h2>
-
     <div class="form-group">
       <label class="form-label">장소명 *</label>
       <input type="text" class="form-input" id="f-name" placeholder="예: 롯데백화점 본점 6층 수유실" />
     </div>
-
     <div class="form-group">
       <label class="form-label">주소 *</label>
       <input type="text" class="form-input" id="f-addr" placeholder="예: 서울 중구 남대문로 81" />
     </div>
-
     <div class="form-group">
-      <label class="form-label">편의시설</label>
-      <div class="facility-grid">
-        <label class="facility-item" onclick="toggleFacility(this)">
-          <input type="checkbox" name="has_sofa"> 🛋️ 수유 소파
-        </label>
-        <label class="facility-item" onclick="toggleFacility(this)">
-          <input type="checkbox" name="has_diaper"> 🧷 기저귀 교환대
-        </label>
-        <label class="facility-item" onclick="toggleFacility(this)">
-          <input type="checkbox" name="has_hotwater"> ♨️ 온수기
-        </label>
-        <label class="facility-item" onclick="toggleFacility(this)">
-          <input type="checkbox" name="has_sink"> 🚿 세면대
-        </label>
+      <label class="form-label">시설 태그</label>
+      <div class="tag-grid" id="register-tags">
+        <span class="tag-item" data-tag="tag_sofa">🛋️ 수유 소파</span>
+        <span class="tag-item" data-tag="tag_diaper">🧷 기저귀 교환대</span>
+        <span class="tag-item" data-tag="tag_hotwater">♨️ 온수기</span>
+        <span class="tag-item" data-tag="tag_sink">🚿 세면대</span>
+        <span class="tag-item" data-tag="tag_lock">🔒 잠금장치</span>
+        <span class="tag-item" data-tag="tag_ac">🌡️ 냉난방</span>
+        <span class="tag-item" data-tag="tag_bright">💡 조명 밝음</span>
+        <span class="tag-item" data-tag="tag_outlet">📱 콘센트</span>
+        <span class="tag-item" data-tag="tag_clean">✨ 청결</span>
+        <span class="tag-item" data-tag="tag_sanitizer">🧴 손소독제</span>
+        <span class="tag-item" data-tag="tag_toilet">🚽 화장실 연결</span>
+        <span class="tag-item" data-tag="tag_private">🤱 프라이빗 공간</span>
+        <span class="tag-item" data-tag="tag_highchair">🪑 하이체어</span>
+        <span class="tag-item" data-tag="tag_microwave">📦 전자레인지</span>
+        <span class="tag-item" data-tag="tag_babybed">🛏️ 아기침대</span>
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">청결도 평점</label>
-      <div class="star-rating" id="star-rating">
+      <div class="star-rating" id="reg-stars">
         <button class="star-btn" data-val="1" onclick="setRating(1)">★</button>
         <button class="star-btn" data-val="2" onclick="setRating(2)">★</button>
         <button class="star-btn" data-val="3" onclick="setRating(3)">★</button>
@@ -565,12 +214,10 @@
         <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">한줄 리뷰</label>
-      <textarea class="form-textarea" id="f-review" placeholder="다른 엄마들에게 이 수유실에 대해 알려주세요 😊"></textarea>
+      <textarea class="form-textarea" id="f-review" placeholder="다른 엄마들에게 알려주세요 😊"></textarea>
     </div>
-
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeRegister()">취소</button>
       <button class="modal-btn primary" onclick="submitPlace()">등록하기 ✓</button>
@@ -578,152 +225,249 @@
   </div>
 </div>
 
-<!-- 로딩 -->
-<div id="loading">
-  <div class="spinner"></div>
-  <div style="font-size:13px; color:#666;">잠시만요...</div>
+<!-- 리뷰 모달 -->
+<div class="modal-wrap" id="review-modal">
+  <div class="modal-box">
+    <h2>✏️ 리뷰 작성하기</h2>
+    <div class="form-group">
+      <label class="form-label">청결도 평점</label>
+      <div class="star-rating" id="review-stars">
+        <button class="star-btn" data-val="1" onclick="setReviewRating(1)">★</button>
+        <button class="star-btn" data-val="2" onclick="setReviewRating(2)">★</button>
+        <button class="star-btn" data-val="3" onclick="setReviewRating(3)">★</button>
+        <button class="star-btn" data-val="4" onclick="setReviewRating(4)">★</button>
+        <button class="star-btn" data-val="5" onclick="setReviewRating(5)">★</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">리뷰 내용 *</label>
+      <textarea class="form-textarea" id="rv-text" placeholder="이 수유실은 어떠셨나요? 솔직하게 알려주세요 😊" style="height:100px"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeReview()">취소</button>
+      <button class="modal-btn primary" onclick="submitReview()">등록 ✓</button>
+    </div>
+  </div>
 </div>
 
-<!-- 토스트 -->
+<!-- 태그 추가 모달 -->
+<div class="modal-wrap" id="tag-modal">
+  <div class="modal-box">
+    <h2>🏷️ 태그 추가하기</h2>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">직접 다녀오신 분만 추가해주세요!</p>
+    <div class="tag-grid" id="add-tags">
+      <span class="tag-item" data-tag="tag_sofa">🛋️ 수유 소파</span>
+      <span class="tag-item" data-tag="tag_diaper">🧷 기저귀 교환대</span>
+      <span class="tag-item" data-tag="tag_hotwater">♨️ 온수기</span>
+      <span class="tag-item" data-tag="tag_sink">🚿 세면대</span>
+      <span class="tag-item" data-tag="tag_lock">🔒 잠금장치</span>
+      <span class="tag-item" data-tag="tag_ac">🌡️ 냉난방</span>
+      <span class="tag-item" data-tag="tag_bright">💡 조명 밝음</span>
+      <span class="tag-item" data-tag="tag_outlet">📱 콘센트</span>
+      <span class="tag-item" data-tag="tag_clean">✨ 청결</span>
+      <span class="tag-item" data-tag="tag_sanitizer">🧴 손소독제</span>
+      <span class="tag-item" data-tag="tag_toilet">🚽 화장실 연결</span>
+      <span class="tag-item" data-tag="tag_private">🤱 프라이빗 공간</span>
+      <span class="tag-item" data-tag="tag_highchair">🪑 하이체어</span>
+      <span class="tag-item" data-tag="tag_microwave">📦 전자레인지</span>
+      <span class="tag-item" data-tag="tag_babybed">🛏️ 아기침대</span>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeTagModal()">취소</button>
+      <button class="modal-btn primary" onclick="submitTags()">추가 ✓</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotoUpload(event)" />
+<div id="loading"><div class="spinner"></div><div style="font-size:13px;color:#666;">잠시만요...</div></div>
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-//  ⚠️  여기에 본인의 Supabase 정보를 입력하세요
-// ══════════════════════════════════════════
 const SUPABASE_URL = 'https://ombyhvikxonvuwdprhty.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYnlodmlreG9udnV3ZHByaHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTQ3NjIsImV4cCI6MjA5Mzk3MDc2Mn0.3a4nGEW8X3WsmJLnM1jpWDes3FbetOHcdzVqPNOZVFY';
-// ══════════════════════════════════════════
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let db = null;
-try {
-  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-    const { createClient } = supabase;
-    db = createClient(SUPABASE_URL, SUPABASE_KEY);
-  }
-} catch(e) { console.log('Supabase 초기화 건너뜀'); }
+let map, markers=[], allPlaces=[], activeFilter='all', selectedRating=0, reviewRating=0, currentPlace=null;
 
-let map, markers = [], allPlaces = [], activeFilter = 'all', selectedRating = 0, currentPlace = null;
+const TAG_MAP = {
+  tag_sofa:'🛋️ 수유 소파', tag_diaper:'🧷 기저귀 교환대', tag_hotwater:'♨️ 온수기',
+  tag_sink:'🚿 세면대', tag_lock:'🔒 잠금장치', tag_ac:'🌡️ 냉난방',
+  tag_bright:'💡 조명 밝음', tag_outlet:'📱 콘센트', tag_clean:'✨ 청결',
+  tag_sanitizer:'🧴 손소독제', tag_toilet:'🚽 화장실 연결',
+  tag_private:'🤱 프라이빗 공간', tag_highchair:'🪑 하이체어',
+  tag_microwave:'📦 전자레인지', tag_babybed:'🛏️ 아기침대'
+};
+const TAG_COLORS = {
+  tag_sofa:'green', tag_diaper:'blue', tag_hotwater:'amber', tag_sink:'purple',
+  tag_lock:'gray', tag_ac:'blue', tag_bright:'amber', tag_outlet:'gray',
+  tag_clean:'green', tag_sanitizer:'green', tag_toilet:'gray',
+  tag_private:'coral', tag_highchair:'amber', tag_microwave:'gray', tag_babybed:'blue'
+};
 
-// 샘플 데이터 (Supabase 연결 전 테스트용)
-const samplePlaces = [
-  { id:1, name:'롯데백화점 본점 수유실', address:'서울 중구 남대문로 81 6층', latitude:37.5645, longitude:126.9814, rating_avg:4.8, has_sofa:true, has_diaper:true, has_hotwater:true, has_sink:false, review:'소파가 정말 편안하고 청결해요. 온수기도 있어서 분유 타기 좋아요!' },
-  { id:2, name:'코엑스몰 수유실', address:'서울 강남구 영동대로 513 B1', latitude:37.5126, longitude:127.0588, rating_avg:4.5, has_sofa:true, has_diaper:true, has_hotwater:false, has_sink:true, review:'넓고 쾌적해요. 주말엔 좀 붐비지만 시설은 최고입니다.' },
-  { id:3, name:'인천공항 T1 수유실', address:'인천 중구 공항로 272 3층', latitude:37.4602, longitude:126.4407, rating_avg:4.9, has_sofa:true, has_diaper:true, has_hotwater:true, has_sink:true, review:'공항이라 그런지 시설이 정말 최고예요! 여러 칸이라 기다리지 않아도 돼요.' },
-  { id:4, name:'스타필드 하남 수유실', address:'경기 하남시 미사대로 750 3층', latitude:37.5502, longitude:127.2062, rating_avg:4.7, has_sofa:true, has_diaper:true, has_hotwater:true, has_sink:false, review:'시설이 정말 좋아요. 넓고 쾌적해서 자주 이용해요.' },
-  { id:5, name:'더현대서울 수유실', address:'서울 영등포구 여의대로 108 5층', latitude:37.5255, longitude:126.9287, rating_avg:4.6, has_sofa:true, has_diaper:false, has_hotwater:false, has_sink:true, review:'인테리어가 예쁘고 조명이 아늑해요. 아기도 편안해 하더라고요.' },
-  { id:6, name:'킨텍스 수유실', address:'경기 고양시 일산서구 킨텍스로 217', latitude:37.6746, longitude:126.7632, rating_avg:4.2, has_sofa:true, has_diaper:true, has_hotwater:false, has_sink:false, review:'행사때마다 이용해요. 시설은 깨끗한데 주말엔 줄이 길어요.' },
-];
-
-// ── 지도 초기화 ──
 window.addEventListener('load', async () => {
-  initMap();
-  await loadPlaces();
-  setupSearch();
-  setupFilters();
+  initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
 });
 
 function initMap() {
-  map = L.map('map', { zoomControl: false, attributionControl: false })
-    .setView([37.5665, 126.978], 11);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19
-  }).addTo(map);
-
-  L.control.zoom({ position: 'bottomleft' }).addTo(map);
+  map = L.map('map', {zoomControl:false, attributionControl:false}).setView([37.5665, 126.978], 11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
+  L.control.zoom({position:'bottomleft'}).addTo(map);
   map.on('click', closePanel);
 }
 
-// ── 데이터 로드 (Supabase 연결되면 실제 데이터, 아니면 샘플) ──
 async function loadPlaces() {
   showLoading(true);
   try {
-    if (!db) {
-      allPlaces = samplePlaces;
-    } else {
-      const { data, error } = await db.from('nursing_room').select('*');
-      if (error) throw error;
-      allPlaces = data && data.length > 0 ? data : samplePlaces;
-    }
-  } catch(e) {
-    allPlaces = samplePlaces;
-  }
+    const {data, error} = await db.from('nursing_room').select('*');
+    if (error) throw error;
+    allPlaces = data || [];
+  } catch(e) { allPlaces = []; }
   showLoading(false);
   renderMarkers();
 }
 
-// ── 마커 렌더링 ──
 function renderMarkers() {
   markers.forEach(m => map.removeLayer(m));
   markers = [];
-
   const filtered = allPlaces.filter(p => {
     if (activeFilter === 'all') return true;
-    return p[activeFilter] === true;
+    return (p.tags || []).includes(activeFilter);
   });
-
   document.getElementById('count-num').textContent = filtered.length;
-
   filtered.forEach(p => {
-    const color = p.rating_avg >= 4.7 ? '#1D9E75' : p.rating_avg >= 4.2 ? '#EF9F27' : '#E05A3A';
+    const color = (p.rating_avg||4) >= 4.7 ? '#1D9E75' : (p.rating_avg||4) >= 4.2 ? '#EF9F27' : '#E05A3A';
     const icon = L.divIcon({
-      className: '',
-      html: `<div style="background:${color};width:38px;height:38px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:17px;">🍼</span></div>`,
-      iconSize: [38, 38], iconAnchor: [19, 38], popupAnchor: [0, -40]
+      className:'',
+      html:`<div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:16px;">🍼</span></div>`,
+      iconSize:[36,36], iconAnchor:[18,36]
     });
-
-    const m = L.marker([p.latitude, p.longitude], { icon }).addTo(map);
+    const m = L.marker([p.latitude, p.longitude], {icon}).addTo(map);
     m.on('click', e => { e.originalEvent?.stopPropagation(); showDetail(p); });
     markers.push(m);
   });
 }
 
-// ── 상세 패널 ──
-function showDetail(place) {
+async function showDetail(place) {
   currentPlace = place;
   document.getElementById('panel-name').textContent = place.name;
   document.getElementById('panel-addr').textContent = '📍 ' + place.address;
-
+  const visited = place.verify_yes || 0;
+  const closed = place.verify_no || 0;
+  document.getElementById('verify-count').textContent = `✅ 다녀왔어요 ${visited}명  ❌ 없어졌어요 ${closed}명`;
   const r = place.rating_avg || 0;
-  const full = Math.floor(r);
-  document.getElementById('panel-stars').textContent = '★'.repeat(full) + '☆'.repeat(5 - full);
-  document.getElementById('panel-rating-num').textContent = r.toFixed(1);
-  document.getElementById('panel-review-count').textContent = '(이용자 평가)';
-
-  const tagMap = [
-    { key:'has_sofa', label:'🛋️ 수유 소파', cls:'green' },
-    { key:'has_diaper', label:'🧷 기저귀 교환대', cls:'blue' },
-    { key:'has_hotwater', label:'♨️ 온수기', cls:'amber' },
-    { key:'has_sink', label:'🚿 세면대', cls:'purple' },
-  ];
+  document.getElementById('panel-stars').textContent = '★'.repeat(Math.floor(r)) + '☆'.repeat(5-Math.floor(r));
+  document.getElementById('panel-rating-num').textContent = r > 0 ? r.toFixed(1) : '-';
+  document.getElementById('panel-review-count').textContent = place.review_count ? `(${place.review_count}개 리뷰)` : '';
+  const tags = place.tags || [];
   const tagsEl = document.getElementById('panel-tags');
-  tagsEl.innerHTML = tagMap
-    .filter(t => place[t.key])
-    .map(t => `<span class="tag ${t.cls}">${t.label}</span>`)
-    .join('');
-
-  document.getElementById('panel-review-text').textContent =
-    place.review ? `"${place.review}"` : '아직 리뷰가 없어요. 첫 리뷰를 남겨보세요!';
-
+  tagsEl.innerHTML = tags.length > 0
+    ? tags.map(t => `<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('')
+    : '<span style="font-size:12px;color:var(--text-muted)">태그 없음 — 아래 태그 버튼으로 추가해주세요!</span>';
+  const photosEl = document.getElementById('panel-photos');
+  photosEl.innerHTML = '<div class="photo-add" onclick="openPhotoUpload()">📷</div>';
+  (place.photos||[]).forEach(url => {
+    const img = document.createElement('img');
+    img.className = 'photo-thumb'; img.src = url;
+    photosEl.insertBefore(img, photosEl.firstChild);
+  });
+  await loadReviews(place.id);
   document.getElementById('detail-panel').classList.add('open');
 }
 
-function closePanel() {
-  document.getElementById('detail-panel').classList.remove('open');
+async function loadReviews(placeId) {
+  const el = document.getElementById('panel-reviews');
+  try {
+    const {data} = await db.from('reviews').select('*').eq('nursing_room_id', placeId).order('created_at', {ascending:false}).limit(5);
+    if (data && data.length > 0) {
+      el.innerHTML = data.map(r => `
+        <div class="review-item">
+          <div class="r-stars">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</div>
+          <div class="r-text">${r.comment}</div>
+          <div class="r-date">${r.author_name||'익명'} · ${new Date(r.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>`).join('');
+    } else {
+      el.innerHTML = '<div id="no-review">아직 리뷰가 없어요. 첫 리뷰를 남겨보세요! 💬</div>';
+    }
+  } catch(e) { el.innerHTML = ''; }
 }
 
-// ── 검색 ──
+function closePanel() { document.getElementById('detail-panel').classList.remove('open'); }
+
+async function verifyPlace(isVisited) {
+  if (!currentPlace) return;
+  const field = isVisited ? 'verify_yes' : 'verify_no';
+  const current = currentPlace[field] || 0;
+  try {
+    await db.from('nursing_room').update({[field]: current+1}).eq('id', currentPlace.id);
+    currentPlace[field] = current + 1;
+    document.getElementById('verify-count').textContent = `✅ 다녀왔어요 ${currentPlace.verify_yes||0}명  ❌ 없어졌어요 ${currentPlace.verify_no||0}명`;
+    showToast(isVisited ? '✅ 다녀왔어요 인증했어요!' : '❌ 신고해주셔서 감사해요!');
+  } catch(e) { showToast('잠시 후 다시 시도해주세요'); }
+}
+
+function openReview() {
+  if (!currentPlace) return;
+  reviewRating = 0;
+  document.querySelectorAll('#review-stars .star-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('rv-text').value = '';
+  document.getElementById('review-modal').classList.add('open');
+}
+function closeReview() { document.getElementById('review-modal').classList.remove('open'); }
+function setReviewRating(val) {
+  reviewRating = val;
+  document.querySelectorAll('#review-stars .star-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) <= val));
+}
+async function submitReview() {
+  const text = document.getElementById('rv-text').value.trim();
+  if (!text) { showToast('리뷰 내용을 입력해주세요'); return; }
+  showLoading(true);
+  try {
+    await db.from('reviews').insert([{nursing_room_id:currentPlace.id, rating:reviewRating||5, comment:text, author_name:'익명'}]);
+    closeReview();
+    await loadReviews(currentPlace.id);
+    showToast('리뷰가 등록됐어요! 감사합니다 💬');
+  } catch(e) { showToast('등록 중 오류가 발생했어요'); }
+  showLoading(false);
+}
+
+function openTagAdd() {
+  if (!currentPlace) return;
+  const current = currentPlace.tags || [];
+  document.querySelectorAll('#add-tags .tag-item').forEach(el => el.classList.toggle('selected', current.includes(el.dataset.tag)));
+  document.getElementById('tag-modal').classList.add('open');
+}
+function closeTagModal() { document.getElementById('tag-modal').classList.remove('open'); }
+async function submitTags() {
+  const selected = [...document.querySelectorAll('#add-tags .tag-item.selected')].map(el => el.dataset.tag);
+  if (!selected.length) { showToast('태그를 하나 이상 선택해주세요'); return; }
+  showLoading(true);
+  try {
+    await db.from('nursing_room').update({tags:selected}).eq('id', currentPlace.id);
+    currentPlace.tags = selected;
+    document.getElementById('panel-tags').innerHTML = selected.map(t => `<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('');
+    const idx = allPlaces.findIndex(p => p.id === currentPlace.id);
+    if (idx >= 0) allPlaces[idx].tags = selected;
+    closeTagModal();
+    showToast('태그가 추가됐어요! 🏷️');
+  } catch(e) { showToast('오류가 발생했어요'); }
+  showLoading(false);
+}
+
+function openPhotoUpload() { document.getElementById('photo-input').click(); }
+async function handlePhotoUpload(e) {
+  showToast('사진 기능은 곧 업데이트 예정이에요! 📷');
+  e.target.value = '';
+}
+
 function setupSearch() {
-  const input = document.getElementById('search-input');
-  input.addEventListener('input', () => {
-    const q = input.value.trim().toLowerCase();
+  document.getElementById('search-input').addEventListener('input', e => {
+    const q = e.target.value.trim().toLowerCase();
     if (!q) { renderMarkers(); return; }
     markers.forEach(m => map.removeLayer(m));
     markers = [];
-    const found = allPlaces.filter(p =>
-      p.name.toLowerCase().includes(q) || p.address.toLowerCase().includes(q)
-    );
+    const found = allPlaces.filter(p => p.name?.toLowerCase().includes(q) || p.address?.toLowerCase().includes(q));
     document.getElementById('count-num').textContent = found.length;
     found.forEach(p => {
       const m = L.marker([p.latitude, p.longitude]).addTo(map);
@@ -733,7 +477,6 @@ function setupSearch() {
   });
 }
 
-// ── 필터 ──
 function setupFilters() {
   document.querySelectorAll('.filter-chip').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -745,96 +488,66 @@ function setupFilters() {
   });
 }
 
-// ── 내 위치 ──
-function goMyLocation() {
-  if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없어요'); return; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    map.setView([pos.coords.latitude, pos.coords.longitude], 14);
-    showToast('현재 위치로 이동했어요 📍');
-  }, () => { showToast('위치 정보 접근이 거부됐어요'); });
-}
-
-// ── 등록 모달 ──
-function openRegister() {
-  document.getElementById('register-modal').classList.add('open');
-}
-function closeRegister() {
-  document.getElementById('register-modal').classList.remove('open');
-  selectedRating = 0;
-  setRating(0);
-}
-
-function toggleFacility(el) {
-  el.classList.toggle('checked');
-}
-
-function setRating(val) {
-  selectedRating = val;
-  document.querySelectorAll('.star-btn').forEach(btn => {
-    btn.classList.toggle('active', parseInt(btn.dataset.val) <= val);
+function setupTagSelectors() {
+  ['register-tags','add-tags'].forEach(id => {
+    document.getElementById(id)?.querySelectorAll('.tag-item').forEach(el => {
+      el.addEventListener('click', () => el.classList.toggle('selected'));
+    });
   });
 }
 
+function goMyLocation() {
+  if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없어요'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    showToast('현재 위치로 이동했어요 📍');
+  }, () => showToast('위치 정보 접근이 거부됐어요'));
+}
+
+function openRegister() { document.getElementById('register-modal').classList.add('open'); }
+function closeRegister() {
+  document.getElementById('register-modal').classList.remove('open');
+  selectedRating = 0; setRating(0);
+  document.querySelectorAll('#register-tags .tag-item').forEach(el => el.classList.remove('selected'));
+  ['f-name','f-addr','f-review'].forEach(id => document.getElementById(id).value = '');
+}
+function setRating(val) {
+  selectedRating = val;
+  document.querySelectorAll('#reg-stars .star-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.val) <= val));
+}
 async function submitPlace() {
   const name = document.getElementById('f-name').value.trim();
   const addr = document.getElementById('f-addr').value.trim();
   if (!name || !addr) { showToast('장소명과 주소는 필수예요!'); return; }
-
-  const facilities = {};
-  document.querySelectorAll('.facility-item').forEach(el => {
-    const cb = el.querySelector('input[type=checkbox]');
-    facilities[cb.name] = el.classList.contains('checked');
-  });
-
+  const tags = [...document.querySelectorAll('#register-tags .tag-item.selected')].map(el => el.dataset.tag);
   const newPlace = {
-    name, address: addr,
-    latitude: 37.5665 + (Math.random() - 0.5) * 0.2,
-    longitude: 126.978 + (Math.random() - 0.5) * 0.2,
+    name, address:addr,
+    latitude: 37.5665 + (Math.random()-0.5)*0.1,
+    longitude: 126.978 + (Math.random()-0.5)*0.1,
     rating_avg: selectedRating || 4.0,
     review: document.getElementById('f-review').value.trim(),
-    ...facilities
+    tags, verify_yes:1, verify_no:0
   };
-
   showLoading(true);
   try {
-    if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
-      const { error } = await db.from('nursing_room').insert([newPlace]);
-      if (error) throw error;
-      await loadPlaces();
-    } else {
-      newPlace.id = Date.now();
-      allPlaces.push(newPlace);
-      renderMarkers();
-    }
-    closeRegister();
+    const {data, error} = await db.from('nursing_room').insert([newPlace]).select();
+    if (error) throw error;
+    if (data) allPlaces.push(data[0]);
+    renderMarkers(); closeRegister();
     showToast('수유실이 등록됐어요! 감사합니다 🍼');
-    map.setView([newPlace.latitude, newPlace.longitude], 14);
-  } catch(e) {
-    showToast('등록 중 오류가 발생했어요');
-  }
+  } catch(e) { showToast('등록 중 오류가 발생했어요'); }
   showLoading(false);
 }
 
-// ── 길 안내 ──
 function navigate() {
   if (!currentPlace) return;
-  const url = `https://map.kakao.com/link/to/${encodeURIComponent(currentPlace.name)},${currentPlace.latitude},${currentPlace.longitude}`;
-  window.open(url, '_blank');
+  window.open(`https://map.kakao.com/link/to/${encodeURIComponent(currentPlace.name)},${currentPlace.latitude},${currentPlace.longitude}`, '_blank');
 }
 
-function writeReview() {
-  showToast('리뷰 기능은 곧 추가될 예정이에요!');
-}
-
-// ── 유틸 ──
-function showLoading(v) {
-  document.getElementById('loading').classList.toggle('show', v);
-}
-
+function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 </script>
