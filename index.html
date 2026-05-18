@@ -31,8 +31,12 @@
     #search-input{width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--border);border-radius:24px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
     #search-input:focus{border-color:var(--green-mid);}
     #search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted);pointer-events:none;}
-    #filters{background:var(--white);padding:8px 16px;display:flex;gap:7px;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--border);scrollbar-width:none;}
+    #filters-wrap{position:relative;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
+    #filters{padding:8px 36px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;}
     #filters::-webkit-scrollbar{display:none;}
+    .filter-arrow{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:28px;background:var(--white);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+    .filter-arrow.left{left:4px;}
+    .filter-arrow.right{right:4px;}
     .filter-chip{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;}
     .filter-chip.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
     #map-wrap{flex:1;position:relative;overflow:hidden;}
@@ -124,14 +128,23 @@
     </div>
   </div>
 
-  <div id="filters">
-    <button class="filter-chip active" data-filter="all">전체</button>
-    <button class="filter-chip" data-filter="tag_sofa">🛋️ 수유 소파</button>
-    <button class="filter-chip" data-filter="tag_diaper">🧷 기저귀 교환대</button>
-    <button class="filter-chip" data-filter="tag_hotwater">♨️ 온수기</button>
-    <button class="filter-chip" data-filter="tag_private">🤱 프라이빗</button>
-    <button class="filter-chip" data-filter="tag_highchair">🪑 하이체어</button>
-    <button class="filter-chip" data-filter="tag_clean">✨ 청결</button>
+  <div id="filters-wrap">
+    <button class="filter-arrow left" onclick="scrollFilters(-150)">&#8249;</button>
+    <div id="filters">
+      <button class="filter-chip active" data-filter="all">전체</button>
+      <button class="filter-chip" data-filter="tag_sofa">🛋️ 수유 소파</button>
+      <button class="filter-chip" data-filter="tag_diaper">🧷 기저귀 교환대</button>
+      <button class="filter-chip" data-filter="tag_hotwater">♨️ 온수기</button>
+      <button class="filter-chip" data-filter="tag_sink">🚿 세면대</button>
+      <button class="filter-chip" data-filter="tag_lock">🔒 잠금장치</button>
+      <button class="filter-chip" data-filter="tag_ac">🌡️ 냉난방</button>
+      <button class="filter-chip" data-filter="tag_clean">✨ 청결</button>
+      <button class="filter-chip" data-filter="tag_private">🤱 프라이빗</button>
+      <button class="filter-chip" data-filter="tag_highchair">🪑 하이체어</button>
+      <button class="filter-chip" data-filter="tag_microwave">📦 전자레인지</button>
+      <button class="filter-chip" data-filter="tag_babybed">🛏️ 아기침대</button>
+    </div>
+    <button class="filter-arrow right" onclick="scrollFilters(150)">&#8250;</button>
   </div>
 
   <div id="map-wrap">
@@ -544,6 +557,9 @@ function navigate() {
   window.open(`https://map.kakao.com/link/to/${encodeURIComponent(currentPlace.name)},${currentPlace.latitude},${currentPlace.longitude}`, '_blank');
 }
 
+function scrollFilters(amount) {
+  document.getElementById('filters').scrollBy({left: amount, behavior: 'smooth'});
+}
 function showLoading(v) { document.getElementById('loading').classList.toggle('show', v); }
 function showToast(msg) {
   const t = document.getElementById('toast');
