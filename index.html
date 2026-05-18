@@ -17,8 +17,7 @@
   <meta name="theme-color" content="#1D9E75" />
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
@@ -139,8 +138,7 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;z-index:4000;white-space:nowrap;pointer-events:none;}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-    .leaflet-control-zoom{border:none!important;box-shadow:var(--shadow-md)!important;}
-    .leaflet-control-zoom a{border-radius:8px!important;}
+    #map * { cursor: default; }
     #photo-input{display:none;}
     #reg-photo-input{display:none;}
   </style>
@@ -400,10 +398,13 @@ window.addEventListener('load', async () => {
 });
 
 function initMap() {
-  map = L.map('map', {zoomControl:false, attributionControl:false}).setView([37.5665, 126.978], 11);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(map);
-  L.control.zoom({position:'bottomleft'}).addTo(map);
-  map.on('click', closePanel);
+  const container = document.getElementById('map');
+  const options = {
+    center: new kakao.maps.LatLng(37.5665, 126.978),
+    level: 7
+  };
+  map = new kakao.maps.Map(container, options);
+  kakao.maps.event.addListener(map, 'click', closePanel);
 }
 
 async function loadPlaces() {
@@ -418,7 +419,7 @@ async function loadPlaces() {
 }
 
 function renderMarkers() {
-  markers.forEach(m => map.removeLayer(m));
+  markers.forEach(m => m.setMap(null));
   markers = [];
   const filtered = allPlaces.filter(p => {
     if (!activeFilters.length) return true;
@@ -427,15 +428,25 @@ function renderMarkers() {
   document.getElementById('count-num').textContent = filtered.length;
   filtered.forEach(p => {
     const color = (p.rating_avg||4) >= 4.7 ? '#1D9E75' : (p.rating_avg||4) >= 4.2 ? '#EF9F27' : '#E05A3A';
-    const icon = L.divIcon({
-      className:'',
-      html:`<div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:16px;">🍼</span></div>`,
-      iconSize:[36,36], iconAnchor:[18,36]
+    const content = `<div style="background:${color};width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 10px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;cursor:pointer;"><span style="transform:rotate(45deg);font-size:16px;">🍼</span></div>`;
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(p.latitude, p.longitude),
+      content,
+      yAnchor: 1
     });
-    const m = L.marker([p.latitude, p.longitude], {icon}).addTo(map);
-    m.on('click', e => { e.originalEvent?.stopPropagation(); showDetail(p); });
-    markers.push(m);
+    overlay.setMap(map);
+    // 클릭 이벤트는 DOM에 직접 추가
+    overlay._place = p;
+    markers.push(overlay);
   });
+  // 마커 클릭 이벤트
+  setTimeout(() => {
+    markers.forEach((overlay, i) => {
+      const el = overlay.getContent();
+      if (typeof el === 'string') return;
+      el.onclick = (e) => { e.stopPropagation(); showDetail(overlay._place); };
+    });
+  }, 100);
 }
 
 async function showDetail(place) {
@@ -619,7 +630,7 @@ function closeRegister() {
   document.querySelectorAll('#register-tags .tag-item').forEach(el=>el.classList.remove('selected'));
   ['f-name','f-addr','f-review'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('photo-preview-list').innerHTML='';
-  if (miniMap) { miniMap.remove(); miniMap=null; miniMarker=null; }
+  if (miniMap) { miniMap = null; miniMarker=null; document.getElementById('mini-map').innerHTML=''; }
 }
 
 function switchLocTab(tab) {
@@ -631,20 +642,29 @@ function switchLocTab(tab) {
 
   if (tab==='new' && !miniMap) {
     setTimeout(() => {
-      const center = map.getCenter();
-      miniMap = L.map('mini-map', {zoomControl:true, attributionControl:false}).setView([center.lat, center.lng], 15);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom:19}).addTo(miniMap);
-      miniMap.on('click', e => {
-        newPlaceLat=e.latlng.lat; newPlaceLng=e.latlng.lng;
-        if (miniMarker) miniMap.removeLayer(miniMarker);
-        miniMarker = L.marker([newPlaceLat, newPlaceLng]).addTo(miniMap);
-        showToast('위치가 지정됐어요 📌');
-      });
-      // 현재 위치로 이동
+      let cLat=37.5665, cLng=126.978;
+      const initMiniMap = (lat, lng) => {
+        miniMap = new kakao.maps.Map(document.getElementById('mini-map'), {
+          center: new kakao.maps.LatLng(lat, lng),
+          level: 4
+        });
+        kakao.maps.event.addListener(miniMap, 'click', e => {
+          newPlaceLat = e.latLng.getLat();
+          newPlaceLng = e.latLng.getLng();
+          if (miniMarker) miniMarker.setMap(null);
+          miniMarker = new kakao.maps.Marker({
+            position: e.latLng,
+            map: miniMap
+          });
+          showToast('위치가 지정됐어요 📌');
+        });
+      };
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
-          miniMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
-        });
+          initMiniMap(pos.coords.latitude, pos.coords.longitude);
+        }, () => initMiniMap(cLat, cLng), {timeout:3000});
+      } else {
+        initMiniMap(cLat, cLng);
       }
     }, 100);
   }
@@ -801,7 +821,8 @@ function setupTagSelectors() {
 function goMyLocation() {
   if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없어요'); return; }
   navigator.geolocation.getCurrentPosition(pos => {
-    map.setView([pos.coords.latitude, pos.coords.longitude], 15);
+    map.setCenter(new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude));
+    map.setLevel(4);
     showToast('현재 위치로 이동했어요 📍');
   }, ()=>showToast('위치 정보 접근이 거부됐어요'));
 }
