@@ -17,7 +17,7 @@
   <meta name="theme-color" content="#1D9E75" />
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services,clusterer"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
@@ -26,120 +26,146 @@
     *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
     html,body{height:100%;overflow:hidden;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);}
     #app{display:flex;flex-direction:column;height:100vh;height:100dvh;}
-    #header{background:var(--white);padding:12px 16px 10px;border-bottom:1px solid var(--border);z-index:100;flex-shrink:0;}
-    #header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-    #logo{display:flex;align-items:center;gap:8px;font-family:'Do Hyeon',sans-serif;font-size:22px;color:var(--text);}
-    #logo-icon{width:32px;height:32px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
-    #btn-register{display:flex;align-items:center;gap:5px;background:var(--green);color:white;border:none;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
-    #btn-register:active{background:var(--green-dark);transform:scale(0.97);}
-    #search-wrap{position:relative;}
-    #search-input{width:100%;padding:10px 16px 10px 40px;border:1.5px solid var(--border);border-radius:24px;font-size:14px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
+    #header{background:var(--white);padding:10px 14px 8px;border-bottom:1px solid var(--border);z-index:100;flex-shrink:0;}
+    #header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;}
+    #logo{display:flex;align-items:center;gap:7px;font-family:'Do Hyeon',sans-serif;font-size:20px;color:var(--text);flex-shrink:0;}
+    #logo-icon{width:30px;height:30px;background:var(--green);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+    #header-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+    #btn-login{display:flex;align-items:center;gap:4px;background:#FEE500;color:#3C1E1E;border:none;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+    #user-info{display:none;align-items:center;gap:5px;}
+    #user-avatar{width:26px;height:26px;border-radius:50%;object-fit:cover;border:2px solid var(--green-mid);}
+    #user-name{font-size:12px;font-weight:500;max-width:55px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    #btn-logout{font-size:11px;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:3px;}
+    #btn-register{display:flex;align-items:center;gap:4px;background:var(--green);color:white;border:none;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+    #btn-admin{display:none;align-items:center;background:#6366f1;color:white;border:none;border-radius:20px;padding:7px 12px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
+    #search-sort-wrap{display:flex;gap:6px;align-items:center;}
+    #search-wrap{position:relative;flex:1;}
+    #search-input{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:22px;font-size:13px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
     #search-input:focus{border-color:var(--green-mid);}
-    #search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--text-muted);pointer-events:none;}
+    #search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--text-muted);pointer-events:none;}
+    #sort-select{padding:9px 8px;border:1.5px solid var(--border);border-radius:22px;font-size:12px;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text);outline:none;cursor:pointer;flex-shrink:0;}
     #filters-wrap{position:relative;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;}
-    #filters{padding:8px 36px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;}
+    #filters{padding:7px 30px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;}
     #filters::-webkit-scrollbar{display:none;}
-    .filter-arrow{position:absolute;top:50%;transform:translateY(-50%);width:28px;height:28px;background:var(--white);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
-    .filter-arrow.left{left:4px;}
-    .filter-arrow.right{right:4px;}
-    .filter-chip{display:flex;align-items:center;gap:4px;padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;}
+    .filter-arrow{position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;background:var(--white);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
+    .filter-arrow.left{left:3px;} .filter-arrow.right{right:3px;}
+    .filter-chip{display:flex;align-items:center;gap:3px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:500;color:var(--text-muted);cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;transition:all 0.15s;}
     .filter-chip.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
     #map-wrap{flex:1;position:relative;overflow:hidden;}
     #map{width:100%;height:100%;}
-    #count-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:500;background:var(--white);border-radius:20px;padding:6px 14px;font-size:12px;color:var(--text-muted);box-shadow:var(--shadow-md);pointer-events:none;white-space:nowrap;}
+    #count-badge{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:500;background:var(--white);border-radius:20px;padding:5px 13px;font-size:12px;color:var(--text-muted);box-shadow:var(--shadow-md);pointer-events:none;white-space:nowrap;}
     #count-badge strong{color:var(--green);font-weight:700;}
-    #btn-mylocation{position:absolute;bottom:20px;right:16px;z-index:500;width:44px;height:44px;background:var(--white);border:none;border-radius:50%;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;}
-    #detail-panel{position:absolute;bottom:0;left:0;right:0;z-index:600;background:var(--white);border-radius:var(--radius) var(--radius) 0 0;box-shadow:var(--shadow-lg);padding:0 0 env(safe-area-inset-bottom);transform:translateY(110%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);max-height:80vh;overflow-y:auto;}
+    #map-btns{position:absolute;bottom:20px;right:14px;z-index:500;display:flex;flex-direction:column;gap:8px;}
+    .map-btn{width:44px;height:44px;background:var(--white);border:none;border-radius:50%;box-shadow:var(--shadow-md);display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;}
+    #detail-panel{position:absolute;bottom:0;left:0;right:0;z-index:600;background:var(--white);border-radius:var(--radius) var(--radius) 0 0;box-shadow:var(--shadow-lg);padding:0 0 env(safe-area-inset-bottom);transform:translateY(110%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);max-height:82vh;overflow-y:auto;}
     #detail-panel.open{transform:translateY(0);}
-    #panel-handle{display:flex;justify-content:center;padding:12px 0 4px;}
+    #panel-handle{display:flex;justify-content:center;padding:10px 0 2px;}
     #panel-handle::after{content:'';width:36px;height:4px;background:var(--border);border-radius:2px;}
-    #panel-content{padding:4px 20px 24px;}
-    #panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
-    #panel-name{font-size:18px;font-weight:700;line-height:1.3;flex:1;margin-right:12px;}
-    #btn-close{width:32px;height:32px;background:var(--bg);border:none;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-    #panel-addr{font-size:13px;color:var(--text-muted);margin-bottom:10px;}
-    #panel-verify{display:flex;gap:8px;margin-bottom:8px;}
-    .verify-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:13px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;}
+    #panel-content{padding:4px 18px 24px;}
+    #panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+    #panel-name{font-size:17px;font-weight:700;line-height:1.3;flex:1;margin-right:10px;}
+    #btn-close{width:30px;height:30px;background:var(--bg);border:none;border-radius:50%;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    #panel-addr{font-size:12px;color:var(--text-muted);margin-bottom:10px;}
+    #panel-verify{display:flex;gap:7px;margin-bottom:7px;}
+    .verify-btn{flex:1;padding:9px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center;}
     .verify-btn.v-yes{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
     .verify-btn.v-no{background:#FAECE7;border-color:#E05A3A;color:#993C1D;}
-    #verify-count{font-size:12px;color:var(--text-muted);margin-bottom:14px;}
-    #panel-rating-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
-    .stars{color:var(--amber);font-size:15px;letter-spacing:1px;}
-    .rating-num{font-size:15px;font-weight:700;}
-    .review-count{font-size:12px;color:var(--text-muted);}
-    #panel-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
-    .tag{padding:5px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+    #verify-count{font-size:11px;color:var(--text-muted);margin-bottom:12px;}
+    #panel-rating-row{display:flex;align-items:center;gap:7px;margin-bottom:12px;}
+    .stars{color:var(--amber);font-size:14px;letter-spacing:1px;}
+    .rating-num{font-size:14px;font-weight:700;}
+    .review-count{font-size:11px;color:var(--text-muted);}
+    #panel-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px;}
+    .tag{padding:4px 9px;border-radius:20px;font-size:11px;font-weight:500;}
     .tag.green{background:var(--green-light);color:var(--green-dark);}
     .tag.blue{background:#E6F1FB;color:#185FA5;}
     .tag.purple{background:#EEEDFE;color:#534AB7;}
     .tag.amber{background:#FAEEDA;color:#854F0B;}
     .tag.coral{background:#FAECE7;color:#993C1D;}
     .tag.gray{background:#F3F4F6;color:#4B5563;}
-    #panel-photos{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;scrollbar-width:none;}
+    #panel-photos{display:flex;gap:7px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;}
     #panel-photos::-webkit-scrollbar{display:none;}
-    .photo-thumb{width:90px;height:90px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;border:1px solid var(--border);cursor:pointer;}
-    .photo-add{width:90px;height:90px;border-radius:var(--radius-sm);border:1.5px dashed var(--green-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:22px;cursor:pointer;flex-shrink:0;background:var(--green-light);color:var(--green);}
-    .photo-add span{font-size:11px;font-weight:500;}
-    #panel-reviews{margin-bottom:16px;}
-    .review-item{padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid var(--green-mid);}
-    .review-item .r-stars{color:var(--amber);font-size:12px;margin-bottom:4px;}
-    .review-item .r-text{font-size:13px;line-height:1.6;color:var(--text-muted);}
-    .review-item .r-date{font-size:11px;color:#aaa;margin-top:4px;}
-    #no-review{font-size:13px;color:var(--text-muted);padding:12px;text-align:center;background:var(--bg);border-radius:var(--radius-sm);}
-    #panel-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
-    .action-btn{padding:12px 8px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:12px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+    .photo-thumb{width:80px;height:80px;border-radius:var(--radius-sm);object-fit:cover;flex-shrink:0;border:1px solid var(--border);cursor:pointer;}
+    .photo-add{width:80px;height:80px;border-radius:var(--radius-sm);border:1.5px dashed var(--green-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:20px;cursor:pointer;flex-shrink:0;background:var(--green-light);color:var(--green);}
+    .photo-add span{font-size:10px;font-weight:500;}
+    #panel-reviews{margin-bottom:14px;}
+    .review-item{padding:9px 11px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:7px;border-left:3px solid var(--green-mid);}
+    .review-item .r-header{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+    .review-item .r-avatar{width:20px;height:20px;border-radius:50%;object-fit:cover;}
+    .review-item .r-name{font-size:12px;font-weight:500;}
+    .review-item .r-stars{color:var(--amber);font-size:11px;}
+    .review-item .r-text{font-size:12px;line-height:1.6;color:var(--text-muted);}
+    .review-item .r-date{font-size:10px;color:#aaa;margin-top:3px;}
+    #no-review{font-size:12px;color:var(--text-muted);padding:12px;text-align:center;background:var(--bg);border-radius:var(--radius-sm);}
+    #panel-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+    .action-btn{padding:11px 6px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:11px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
     .action-btn.primary{background:var(--green);color:white;border-color:var(--green);}
     .action-btn:active{transform:scale(0.97);}
     .modal-wrap{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.5);align-items:flex-end;}
     .modal-wrap.open{display:flex;}
-    .modal-box{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));width:100%;max-height:92vh;overflow-y:auto;animation:slideUp 0.3s ease;}
+    .modal-box{background:var(--white);border-radius:var(--radius) var(--radius) 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom));width:100%;max-height:92vh;overflow-y:auto;animation:slideUp 0.3s ease;}
     @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-    .modal-box h2{font-size:18px;font-weight:700;margin-bottom:18px;}
-    .form-group{margin-bottom:16px;}
-    .form-label{display:block;font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:6px;}
-    .form-input,.form-textarea{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
+    .modal-box h2{font-size:17px;font-weight:700;margin-bottom:16px;}
+    .form-group{margin-bottom:14px;}
+    .form-label{display:block;font-size:11px;font-weight:500;color:var(--text-muted);margin-bottom:5px;}
+    .form-input,.form-textarea{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);outline:none;}
     .form-input:focus,.form-textarea:focus{border-color:var(--green-mid);}
-    .form-textarea{height:90px;resize:none;}
-    .tag-grid{display:flex;flex-wrap:wrap;gap:8px;}
-    .tag-item{padding:8px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
+    .form-textarea{height:80px;resize:none;}
+    .tag-grid{display:flex;flex-wrap:wrap;gap:7px;}
+    .tag-item{padding:7px 12px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
     .tag-item.selected{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);font-weight:500;}
-    .star-rating{display:flex;gap:8px;}
-    .star-btn{font-size:32px;cursor:pointer;color:#ddd;background:none;border:none;padding:0;}
+    .star-rating{display:flex;gap:6px;}
+    .star-btn{font-size:30px;cursor:pointer;color:#ddd;background:none;border:none;padding:0;}
     .star-btn.active{color:var(--amber);}
-    .modal-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:20px;}
-    .modal-btn{padding:15px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:15px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
+    .modal-actions{display:grid;grid-template-columns:1fr 2fr;gap:7px;margin-top:18px;}
+    .modal-btn{padding:14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:14px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
     .modal-btn.primary{background:var(--green);color:white;border-color:var(--green);}
-    /* 위치 선택 */
-    .location-tabs{display:flex;gap:8px;margin-bottom:14px;}
-    .loc-tab{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
+    .location-tabs{display:flex;gap:7px;margin-bottom:12px;}
+    .loc-tab{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
     .loc-tab.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
-    #nearby-list{max-height:200px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--radius-sm);}
-    .nearby-item{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;font-size:13px;}
+    #nearby-list{max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:var(--radius-sm);}
+    .nearby-item{padding:11px 13px;border-bottom:1px solid var(--border);cursor:pointer;font-size:12px;}
     .nearby-item:last-child{border-bottom:none;}
-    .nearby-item:active{background:var(--green-light);}
     .nearby-item .ni-name{font-weight:500;margin-bottom:2px;}
-    .nearby-item .ni-addr{font-size:11px;color:var(--text-muted);}
+    .nearby-item .ni-addr{font-size:10px;color:var(--text-muted);}
     .nearby-item.selected-item{background:var(--green-light);border-left:3px solid var(--green);}
-    #mini-map{width:100%;height:200px;border-radius:var(--radius-sm);border:1.5px solid var(--border);overflow:hidden;margin-top:8px;}
-    .notice-box{background:#FFF8E7;border:1px solid #F5CC6E;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#7A5C00;line-height:1.6;}
-    /* 사진 업로드 미리보기 */
-    #photo-preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
-    .preview-item{position:relative;width:72px;height:72px;}
-    .preview-item img{width:72px;height:72px;border-radius:8px;object-fit:cover;}
-    .preview-remove{position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#E05A3A;color:white;border-radius:50%;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
-    /* 사진 전체보기 */
+    #mini-map{width:100%;height:180px;border-radius:var(--radius-sm);border:1.5px solid var(--border);overflow:hidden;margin-top:7px;}
+    .notice-box{background:#FFF8E7;border:1px solid #F5CC6E;border-radius:var(--radius-sm);padding:9px 11px;margin-bottom:12px;font-size:11px;color:#7A5C00;line-height:1.6;}
+    #photo-preview-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;}
+    .preview-item{position:relative;width:66px;height:66px;}
+    .preview-item img{width:66px;height:66px;border-radius:8px;object-fit:cover;}
+    .preview-remove{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:#E05A3A;color:white;border-radius:50%;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .report-type-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+    .report-type-btn{padding:12px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
+    .report-type-btn.selected{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
+    #admin-modal .modal-box{max-height:95vh;}
+    .admin-tabs{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;}
+    .admin-tab{padding:7px 14px;border:1.5px solid var(--border);border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
+    .admin-tab.active{background:#6366f1;border-color:#6366f1;color:white;}
+    .admin-item{padding:12px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:8px;}
+    .admin-item-name{font-size:13px;font-weight:700;margin-bottom:3px;}
+    .admin-item-addr{font-size:11px;color:var(--text-muted);margin-bottom:8px;}
+    .admin-item-actions{display:flex;gap:6px;}
+    .admin-btn{padding:6px 12px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:none;font-family:'Noto Sans KR',sans-serif;}
+    .admin-btn.approve{background:var(--green-light);color:var(--green-dark);}
+    .admin-btn.delete{background:#FAECE7;color:#993C1D;}
+    .admin-btn.view{background:#E6F1FB;color:#185FA5;}
+    .report-item{padding:11px;background:var(--bg);border-radius:var(--radius-sm);margin-bottom:7px;}
+    .report-item-type{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-bottom:4px;}
+    .report-item-type.missing{background:#FAECE7;color:#993C1D;}
+    .report-item-type.new{background:var(--green-light);color:var(--green-dark);}
+    .report-item-type.wrong{background:#FAEEDA;color:#854F0B;}
     #photo-viewer{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;}
     #photo-viewer.open{display:flex;}
     #photo-viewer img{max-width:95vw;max-height:90vh;border-radius:8px;}
-    #photo-viewer-close{position:absolute;top:20px;right:20px;color:white;font-size:28px;cursor:pointer;background:none;border:none;}
-    #loading{display:none;position:fixed;inset:0;z-index:3000;background:rgba(255,255,255,0.85);align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+    #photo-viewer-close{position:absolute;top:20px;right:20px;color:white;font-size:26px;cursor:pointer;background:none;border:none;}
+    #loading{display:none;position:fixed;inset:0;z-index:3000;background:rgba(255,255,255,0.85);align-items:center;justify-content:center;flex-direction:column;gap:10px;}
     #loading.show{display:flex;}
-    .spinner{width:40px;height:40px;border:3px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
+    .spinner{width:38px;height:38px;border:3px solid var(--green-light);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;}
     @keyframes spin{to{transform:rotate(360deg)}}
-    #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;z-index:4000;white-space:nowrap;pointer-events:none;}
+    #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1a1a;color:white;padding:9px 16px;border-radius:20px;font-size:12px;font-weight:500;opacity:0;transition:all 0.3s;z-index:4000;white-space:nowrap;pointer-events:none;}
     #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-    #photo-input{display:none;}
-    #reg-photo-input{display:none;}
+    #photo-input,#reg-photo-input{display:none;}
   </style>
 </head>
 <body>
@@ -147,20 +173,37 @@
   <div id="header">
     <div id="header-top">
       <div id="logo"><div id="logo-icon">🍼</div>맘마존</div>
-      <button id="btn-register" onclick="openRegister()">+ 수유실 등록</button>
+      <div id="header-right">
+        <button id="btn-login" onclick="kakaoLogin()">K 로그인</button>
+        <div id="user-info">
+          <img id="user-avatar" src="" alt="프로필" />
+          <span id="user-name"></span>
+          <button id="btn-logout" onclick="kakaoLogout()">로그아웃</button>
+        </div>
+        <button id="btn-admin" onclick="openAdmin()">⚙️ 관리</button>
+        <button id="btn-register" onclick="openRegister()">+ 등록</button>
+      </div>
     </div>
-    <div id="search-wrap">
-      <span id="search-icon">🔍</span>
-      <input type="text" id="search-input" placeholder="장소명, 지역으로 검색..." />
+    <div id="search-sort-wrap">
+      <div id="search-wrap">
+        <span id="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="장소명, 지역으로 검색..." />
+      </div>
+      <select id="sort-select" onchange="handleSort()">
+        <option value="default">기본순</option>
+        <option value="rating">평점순</option>
+        <option value="distance">거리순</option>
+        <option value="review">리뷰순</option>
+      </select>
     </div>
   </div>
 
   <div id="filters-wrap">
-    <button class="filter-arrow left" onclick="scrollFilters(-150)">&#8249;</button>
+    <button class="filter-arrow left" onclick="scrollFilters(-140)">&#8249;</button>
     <div id="filters">
       <button class="filter-chip active" data-filter="all">전체</button>
       <button class="filter-chip" data-filter="tag_sofa">🛋️ 수유 소파</button>
-      <button class="filter-chip" data-filter="tag_diaper">🧷 기저귀 교환대</button>
+      <button class="filter-chip" data-filter="tag_diaper">🧷 기저귀대</button>
       <button class="filter-chip" data-filter="tag_hotwater">♨️ 온수기</button>
       <button class="filter-chip" data-filter="tag_sink">🚿 세면대</button>
       <button class="filter-chip" data-filter="tag_lock">🔒 잠금장치</button>
@@ -171,13 +214,16 @@
       <button class="filter-chip" data-filter="tag_microwave">📦 전자레인지</button>
       <button class="filter-chip" data-filter="tag_babybed">🛏️ 아기침대</button>
     </div>
-    <button class="filter-arrow right" onclick="scrollFilters(150)">&#8250;</button>
+    <button class="filter-arrow right" onclick="scrollFilters(140)">&#8250;</button>
   </div>
 
   <div id="map-wrap">
     <div id="map"></div>
     <div id="count-badge">수유실 <strong id="count-num">0</strong>개</div>
-    <button id="btn-mylocation" onclick="goMyLocation()">📍</button>
+    <div id="map-btns">
+      <button class="map-btn" onclick="goMyLocation()">📍</button>
+      <button class="map-btn" onclick="openReport()">🚩</button>
+    </div>
 
     <div id="detail-panel">
       <div id="panel-handle"></div>
@@ -210,12 +256,10 @@
   </div>
 </div>
 
-<!-- 수유실 등록 모달 -->
+<!-- 등록 모달 -->
 <div class="modal-wrap" id="register-modal">
   <div class="modal-box">
     <h2>🍼 수유실 등록하기</h2>
-
-    <!-- 위치 선택 탭 -->
     <div class="form-group">
       <label class="form-label">위치 선택 방법</label>
       <div class="location-tabs">
@@ -223,32 +267,26 @@
         <button class="loc-tab" id="tab-new" onclick="switchLocTab('new')">✏️ 신규 등록</button>
       </div>
     </div>
-
-    <!-- 내 주변 선택 -->
     <div id="loc-nearby">
       <div class="form-group">
-        <label class="form-label">주변 수유실 선택 <span style="color:var(--text-muted);font-weight:400">(이미 등록된 곳에 정보 추가)</span></label>
-        <button class="modal-btn" style="width:100%;margin-bottom:8px;" onclick="loadNearbyPlaces()">🔍 내 주변 수유실 불러오기</button>
+        <label class="form-label">주변 수유실 선택</label>
+        <button class="modal-btn" style="width:100%;margin-bottom:7px;" onclick="loadNearbyPlaces()">🔍 내 주변 수유실 불러오기</button>
         <div id="nearby-list" style="display:none"></div>
-        <div id="nearby-selected" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-light);border-radius:var(--radius-sm);font-size:13px;color:var(--green-dark);font-weight:500;"></div>
+        <div id="nearby-selected" style="display:none;margin-top:7px;padding:9px 11px;background:var(--green-light);border-radius:var(--radius-sm);font-size:12px;color:var(--green-dark);font-weight:500;"></div>
       </div>
     </div>
-
-    <!-- 신규 등록 -->
     <div id="loc-new" style="display:none">
       <div class="form-group">
         <label class="form-label">장소명 *</label>
         <input type="text" class="form-input" id="f-name" placeholder="예: 롯데백화점 본점 6층 수유실" />
       </div>
       <div class="form-group">
-        <label class="form-label">주소 입력 또는 지도에서 위치 지정</label>
-        <input type="text" class="form-input" id="f-addr" placeholder="예: 서울 중구 남대문로 81" style="margin-bottom:8px;" />
+        <label class="form-label">주소 또는 지도에서 위치 지정</label>
+        <input type="text" class="form-input" id="f-addr" placeholder="예: 서울 중구 남대문로 81" style="margin-bottom:7px;" />
         <div id="mini-map"></div>
-        <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">📌 지도를 클릭하면 위치가 지정돼요</p>
+        <p style="font-size:10px;color:var(--text-muted);margin-top:5px;">📌 지도를 클릭하면 위치가 지정돼요</p>
       </div>
     </div>
-
-    <!-- 공통 정보 -->
     <div class="form-group">
       <label class="form-label">시설 태그</label>
       <div class="tag-grid" id="register-tags">
@@ -263,13 +301,12 @@
         <span class="tag-item" data-tag="tag_clean">✨ 청결</span>
         <span class="tag-item" data-tag="tag_sanitizer">🧴 손소독제</span>
         <span class="tag-item" data-tag="tag_toilet">🚽 화장실 연결</span>
-        <span class="tag-item" data-tag="tag_private">🤱 프라이빗 공간</span>
+        <span class="tag-item" data-tag="tag_private">🤱 프라이빗</span>
         <span class="tag-item" data-tag="tag_highchair">🪑 하이체어</span>
         <span class="tag-item" data-tag="tag_microwave">📦 전자레인지</span>
         <span class="tag-item" data-tag="tag_babybed">🛏️ 아기침대</span>
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">청결도 평점</label>
       <div class="star-rating" id="reg-stars">
@@ -280,20 +317,16 @@
         <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
       </div>
     </div>
-
     <div class="form-group">
       <label class="form-label">한줄 리뷰</label>
       <textarea class="form-textarea" id="f-review" placeholder="다른 엄마들에게 알려주세요 😊"></textarea>
     </div>
-
-    <!-- 사진 업로드 -->
     <div class="form-group">
       <label class="form-label">사진 추가 (선택)</label>
-      <div class="notice-box">📷 사진 촬영 전 꼭 확인해주세요!<br>다른 이용자가 있을 경우 촬영을 삼가주세요. 개인정보 보호를 위해 사람이 포함된 사진은 등록이 제한될 수 있어요.</div>
+      <div class="notice-box">📷 다른 이용자가 있을 경우 촬영을 삼가주세요.</div>
       <button class="modal-btn" style="width:100%;" onclick="document.getElementById('reg-photo-input').click()">📷 사진 선택하기</button>
       <div id="photo-preview-list"></div>
     </div>
-
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeRegister()">취소</button>
       <button class="modal-btn primary" onclick="submitPlace()">등록하기 ✓</button>
@@ -305,6 +338,7 @@
 <div class="modal-wrap" id="review-modal">
   <div class="modal-box">
     <h2>✏️ 리뷰 작성하기</h2>
+    <div id="review-login-notice" style="display:none;background:#FFF8E7;border:1px solid #F5CC6E;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#7A5C00;">💡 카카오 로그인 시 실명으로 리뷰가 등록돼요!</div>
     <div class="form-group">
       <label class="form-label">청결도 평점</label>
       <div class="star-rating" id="review-stars">
@@ -317,7 +351,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">리뷰 내용 *</label>
-      <textarea class="form-textarea" id="rv-text" placeholder="이 수유실은 어떠셨나요? 솔직하게 알려주세요 😊" style="height:100px"></textarea>
+      <textarea class="form-textarea" id="rv-text" placeholder="이 수유실은 어떠셨나요? 😊" style="height:90px"></textarea>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeReview()">취소</button>
@@ -326,11 +360,11 @@
   </div>
 </div>
 
-<!-- 태그 추가 모달 -->
+<!-- 태그 모달 -->
 <div class="modal-wrap" id="tag-modal">
   <div class="modal-box">
     <h2>🏷️ 태그 추가하기</h2>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">직접 다녀오신 분만 추가해주세요!</p>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">직접 다녀오신 분만 추가해주세요!</p>
     <div class="tag-grid" id="add-tags">
       <span class="tag-item" data-tag="tag_sofa">🛋️ 수유 소파</span>
       <span class="tag-item" data-tag="tag_diaper">🧷 기저귀 교환대</span>
@@ -343,7 +377,7 @@
       <span class="tag-item" data-tag="tag_clean">✨ 청결</span>
       <span class="tag-item" data-tag="tag_sanitizer">🧴 손소독제</span>
       <span class="tag-item" data-tag="tag_toilet">🚽 화장실 연결</span>
-      <span class="tag-item" data-tag="tag_private">🤱 프라이빗 공간</span>
+      <span class="tag-item" data-tag="tag_private">🤱 프라이빗</span>
       <span class="tag-item" data-tag="tag_highchair">🪑 하이체어</span>
       <span class="tag-item" data-tag="tag_microwave">📦 전자레인지</span>
       <span class="tag-item" data-tag="tag_babybed">🛏️ 아기침대</span>
@@ -355,511 +389,384 @@
   </div>
 </div>
 
-<!-- 사진 전체보기 -->
+<!-- 제보 모달 -->
+<div class="modal-wrap" id="report-modal">
+  <div class="modal-box">
+    <h2>🚩 수유실 제보하기</h2>
+    <div class="form-group">
+      <label class="form-label">제보 유형</label>
+      <div class="report-type-grid">
+        <button class="report-type-btn" data-type="missing" onclick="selectReportType('missing')">❌ 수유실 없어짐</button>
+        <button class="report-type-btn" data-type="new_area" onclick="selectReportType('new_area')">📍 이 지역에 필요해요</button>
+        <button class="report-type-btn" data-type="wrong_info" onclick="selectReportType('wrong_info')">✏️ 정보가 틀렸어요</button>
+        <button class="report-type-btn" data-type="new_found" onclick="selectReportType('new_found')">🆕 새 수유실 발견</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">장소명 또는 지역</label>
+      <input type="text" class="form-input" id="report-place" placeholder="예: 강남역 3번 출구 근처" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">상세 내용</label>
+      <textarea class="form-textarea" id="report-desc" placeholder="자세히 알려주시면 빠르게 반영할게요 😊"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeReport()">취소</button>
+      <button class="modal-btn primary" onclick="submitReport()">제보하기 ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- 관리자 모달 -->
+<div class="modal-wrap" id="admin-modal">
+  <div class="modal-box">
+    <h2>⚙️ 관리자 페이지</h2>
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchAdminTab('places')">🍼 수유실</button>
+      <button class="admin-tab" onclick="switchAdminTab('reports')">🚩 제보</button>
+      <button class="admin-tab" onclick="switchAdminTab('reviews')">✏️ 리뷰</button>
+    </div>
+    <div id="admin-content"></div>
+    <div style="margin-top:14px;">
+      <button class="modal-btn" style="width:100%;" onclick="closeAdmin()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <div id="photo-viewer">
   <button id="photo-viewer-close" onclick="closePhotoViewer()">✕</button>
   <img id="photo-viewer-img" src="" alt="수유실 사진" />
 </div>
-
 <input type="file" id="photo-input" accept="image/*" multiple onchange="handleDetailPhotoUpload(event)" />
 <input type="file" id="reg-photo-input" accept="image/*" multiple onchange="handleRegPhotoSelect(event)" />
-<div id="loading"><div class="spinner"></div><div style="font-size:13px;color:#666;">잠시만요...</div></div>
+<div id="loading"><div class="spinner"></div><div style="font-size:12px;color:#666;">잠시만요...</div></div>
 <div id="toast"></div>
 
 <script>
-const SUPABASE_URL = 'https://ombyhvikxonvuwdprhty.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYnlodmlreG9udnV3ZHByaHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTQ3NjIsImV4cCI6MjA5Mzk3MDc2Mn0.3a4nGEW8X3WsmJLnM1jpWDes3FbetOHcdzVqPNOZVFY';
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_URL='https://ombyhvikxonvuwdprhty.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9tYnlodmlreG9udnV3ZHByaHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgzOTQ3NjIsImV4cCI6MjA5Mzk3MDc2Mn0.3a4nGEW8X3WsmJLnM1jpWDes3FbetOHcdzVqPNOZVFY';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let map, miniMap, miniMarker;
-let markers=[], allPlaces=[], activeFilters=[], selectedRating=0, reviewRating=0, currentPlace=null;
-let selectedNearbyPlace=null, selectedLocTab='nearby', newPlaceLat=null, newPlaceLng=null;
-let regPhotos=[];
+// ★ 여기 두 곳 교체하세요 ★
+const KAKAO_REST_KEY='46c844877289f9837eb14985c02b34d0'; // 카카오 콘솔 > 앱 > 플랫폼 키 > REST API 키
+const ADMIN_KAKAO_IDS=[01062436293]; // 관리자 카카오 ID (숫자). 예: [1234567890]
 
-const TAG_MAP = {
-  tag_sofa:'🛋️ 수유 소파', tag_diaper:'🧷 기저귀 교환대', tag_hotwater:'♨️ 온수기',
-  tag_sink:'🚿 세면대', tag_lock:'🔒 잠금장치', tag_ac:'🌡️ 냉난방',
-  tag_bright:'💡 조명 밝음', tag_outlet:'📱 콘센트', tag_clean:'✨ 청결',
-  tag_sanitizer:'🧴 손소독제', tag_toilet:'🚽 화장실 연결',
-  tag_private:'🤱 프라이빗 공간', tag_highchair:'🪑 하이체어',
-  tag_microwave:'📦 전자레인지', tag_babybed:'🛏️ 아기침대'
-};
-const TAG_COLORS = {
-  tag_sofa:'green', tag_diaper:'blue', tag_hotwater:'amber', tag_sink:'purple',
-  tag_lock:'gray', tag_ac:'blue', tag_bright:'amber', tag_outlet:'gray',
-  tag_clean:'green', tag_sanitizer:'green', tag_toilet:'gray',
-  tag_private:'coral', tag_highchair:'amber', tag_microwave:'gray', tag_babybed:'blue'
-};
+const REDIRECT_URI='https://mammazone.vercel.app';
 
-window.addEventListener('load', () => {
-  setTimeout(async () => {
-    initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
-  }, 100);
+let map,miniMap,miniMarker,clusterer;
+let markers=[],allPlaces=[],activeFilters=[],selectedRating=0,reviewRating=0,currentPlace=null;
+let selectedNearbyPlace=null,selectedLocTab='nearby',newPlaceLat=null,newPlaceLng=null;
+let regPhotos=[],currentUser=null,myLat=null,myLng=null,currentSort='default',selectedReportType=null;
+
+const TAG_MAP={tag_sofa:'🛋️ 수유 소파',tag_diaper:'🧷 기저귀 교환대',tag_hotwater:'♨️ 온수기',tag_sink:'🚿 세면대',tag_lock:'🔒 잠금장치',tag_ac:'🌡️ 냉난방',tag_bright:'💡 조명 밝음',tag_outlet:'📱 콘센트',tag_clean:'✨ 청결',tag_sanitizer:'🧴 손소독제',tag_toilet:'🚽 화장실 연결',tag_private:'🤱 프라이빗',tag_highchair:'🪑 하이체어',tag_microwave:'📦 전자레인지',tag_babybed:'🛏️ 아기침대'};
+const TAG_COLORS={tag_sofa:'green',tag_diaper:'blue',tag_hotwater:'amber',tag_sink:'purple',tag_lock:'gray',tag_ac:'blue',tag_bright:'amber',tag_outlet:'gray',tag_clean:'green',tag_sanitizer:'green',tag_toilet:'gray',tag_private:'coral',tag_highchair:'amber',tag_microwave:'gray',tag_babybed:'blue'};
+
+window.addEventListener('load',()=>{
+  setTimeout(async()=>{
+    initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors(); checkKakaoLogin();
+  },100);
 });
 
-function initMap() {
-  map = new kakao.maps.Map(document.getElementById('map'), {
-    center: new kakao.maps.LatLng(37.5665, 126.978),
-    level: 7
-  });
-  kakao.maps.event.addListener(map, 'click', closePanel);
+function initMap(){
+  map=new kakao.maps.Map(document.getElementById('map'),{center:new kakao.maps.LatLng(37.5665,126.978),level:7});
+  kakao.maps.event.addListener(map,'click',closePanel);
+  clusterer=new kakao.maps.MarkerClusterer({map,averageCenter:true,minLevel:5,styles:[
+    {width:'44px',height:'44px',background:'#1D9E75',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'44px',fontSize:'13px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
+    {width:'54px',height:'54px',background:'#EF9F27',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'54px',fontSize:'15px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
+    {width:'64px',height:'64px',background:'#E05A3A',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'64px',fontSize:'17px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
+  ]});
 }
 
-async function loadPlaces() {
+// ── 카카오 로그인 ──
+function checkKakaoLogin(){
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  if(code){window.history.replaceState({},'','/');fetchKakaoToken(code);return;}
+  const saved=localStorage.getItem('mammazone_user');
+  if(saved){currentUser=JSON.parse(saved);updateUserUI();}
+}
+function kakaoLogin(){
+  window.location.href=`https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
+}
+async function fetchKakaoToken(code){
   showLoading(true);
-  try {
-    const {data, error} = await db.from('nursing_room').select('*');
-    if (error) throw error;
-    allPlaces = data || [];
-  } catch(e) { allPlaces = []; }
-  showLoading(false);
-  renderMarkers();
-}
-
-function renderMarkers() {
-  markers.forEach(m => m.setMap(null));
-  markers = [];
-  const filtered = allPlaces.filter(p => {
-    if (!activeFilters.length) return true;
-    return activeFilters.every(f => (p.tags||[]).includes(f));
-  });
-  document.getElementById('count-num').textContent = filtered.length;
-  filtered.forEach(p => {
-    const color = (p.rating_avg||4) >= 4.7 ? '#1D9E75' : (p.rating_avg||4) >= 4.2 ? '#EF9F27' : '#E05A3A';
-    const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-        <path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="${color}"/>
-        <circle cx="18" cy="17" r="10" fill="white" opacity="0.95"/>
-        <text x="18" y="22" font-size="12" text-anchor="middle">🍼</text>
-      </svg>`
-    )));
-    const markerImage = new kakao.maps.MarkerImage(
-      markerImageSrc,
-      new kakao.maps.Size(36, 44),
-      { offset: new kakao.maps.Point(18, 44) }
-    );
-    const marker = new kakao.maps.Marker({
-      map,
-      position: new kakao.maps.LatLng(p.latitude, p.longitude),
-      image: markerImage,
-      title: p.name
-    });
-    kakao.maps.event.addListener(marker, 'click', () => showDetail(p));
-    markers.push(marker);
-  });
-}
-
-async function showDetail(place) {
-  currentPlace = place;
-  document.getElementById('panel-name').textContent = place.name;
-  document.getElementById('panel-addr').textContent = '📍 ' + place.address;
-  const visited = place.verify_yes||0, closed = place.verify_no||0;
-  document.getElementById('verify-count').textContent = `✅ 다녀왔어요 ${visited}명  ❌ 없어졌어요 ${closed}명`;
-  const r = place.rating_avg||0;
-  document.getElementById('panel-stars').textContent = '★'.repeat(Math.floor(r))+'☆'.repeat(5-Math.floor(r));
-  document.getElementById('panel-rating-num').textContent = r > 0 ? r.toFixed(1) : '-';
-  document.getElementById('panel-review-count').textContent = place.review_count ? `(${place.review_count}개 리뷰)` : '';
-  const tags = place.tags||[];
-  document.getElementById('panel-tags').innerHTML = tags.length > 0
-    ? tags.map(t=>`<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('')
-    : '<span style="font-size:12px;color:var(--text-muted)">태그 없음 — 태그 버튼으로 추가해주세요!</span>';
-
-  // 사진
-  const photosEl = document.getElementById('panel-photos');
-  const photos = place.photos||[];
-  photosEl.innerHTML = `<div class="photo-add" onclick="document.getElementById('photo-input').click()"><span>📷</span><span>사진 추가</span></div>`;
-  photos.forEach(url => {
-    const img = document.createElement('img');
-    img.className='photo-thumb'; img.src=url;
-    img.onclick = () => openPhotoViewer(url);
-    photosEl.insertBefore(img, photosEl.firstChild);
-  });
-
-  await loadReviews(place.id);
-  document.getElementById('detail-panel').classList.add('open');
-}
-
-async function loadReviews(placeId) {
-  const el = document.getElementById('panel-reviews');
-  try {
-    const {data} = await db.from('reviews').select('*').eq('nursing_room_id', placeId).order('created_at',{ascending:false}).limit(5);
-    el.innerHTML = data && data.length > 0
-      ? data.map(r=>`<div class="review-item"><div class="r-stars">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</div><div class="r-text">${r.comment}</div><div class="r-date">${r.author_name||'익명'} · ${new Date(r.created_at).toLocaleDateString('ko-KR')}</div></div>`).join('')
-      : '<div id="no-review">아직 리뷰가 없어요. 첫 리뷰를 남겨보세요! 💬</div>';
-  } catch(e) { el.innerHTML = ''; }
-}
-
-function closePanel() { document.getElementById('detail-panel').classList.remove('open'); }
-
-// 사진 전체보기
-function openPhotoViewer(url) {
-  document.getElementById('photo-viewer-img').src = url;
-  document.getElementById('photo-viewer').classList.add('open');
-}
-function closePhotoViewer() { document.getElementById('photo-viewer').classList.remove('open'); }
-
-// 상세화면 사진 업로드
-async function handleDetailPhotoUpload(e) {
-  if (!currentPlace) return;
-  const files = Array.from(e.target.files);
-  if (!files.length) return;
-  showLoading(true);
-  try {
-    const urls = [];
-    for (const file of files) {
-      const ext = file.name.split('.').pop();
-      const path = `${currentPlace.id}/${Date.now()}.${ext}`;
-      const {error} = await db.storage.from('photos').upload(path, file, {upsert:true});
-      if (!error) {
-        const {data} = db.storage.from('photos').getPublicUrl(path);
-        urls.push(data.publicUrl);
-      }
-    }
-    if (urls.length) {
-      const existing = currentPlace.photos||[];
-      const newPhotos = [...existing, ...urls];
-      await db.from('nursing_room').update({photos:newPhotos}).eq('id', currentPlace.id);
-      currentPlace.photos = newPhotos;
-      const photosEl = document.getElementById('panel-photos');
-      photosEl.innerHTML = `<div class="photo-add" onclick="document.getElementById('photo-input').click()"><span>📷</span><span>사진 추가</span></div>`;
-      newPhotos.forEach(url => {
-        const img = document.createElement('img');
-        img.className='photo-thumb'; img.src=url;
-        img.onclick = () => openPhotoViewer(url);
-        photosEl.insertBefore(img, photosEl.firstChild);
-      });
-      showToast(`사진 ${urls.length}장이 등록됐어요! 📷`);
-    }
-  } catch(e) { showToast('사진 업로드 중 오류가 발생했어요'); }
-  showLoading(false);
-  e.target.value='';
-}
-
-// 등록 모달 사진 선택 (미리보기)
-function handleRegPhotoSelect(e) {
-  const files = Array.from(e.target.files);
-  regPhotos = [...regPhotos, ...files];
-  renderRegPhotoPreviews();
-  e.target.value='';
-}
-function renderRegPhotoPreviews() {
-  const wrap = document.getElementById('photo-preview-list');
-  wrap.innerHTML = regPhotos.map((f,i) => {
-    const url = URL.createObjectURL(f);
-    return `<div class="preview-item"><img src="${url}" /><button class="preview-remove" onclick="removeRegPhoto(${i})">✕</button></div>`;
-  }).join('');
-}
-function removeRegPhoto(idx) {
-  regPhotos.splice(idx, 1);
-  renderRegPhotoPreviews();
-}
-
-// 인증
-async function verifyPlace(isVisited) {
-  if (!currentPlace) return;
-  const field = isVisited ? 'verify_yes' : 'verify_no';
-  const cur = currentPlace[field]||0;
-  try {
-    await db.from('nursing_room').update({[field]:cur+1}).eq('id', currentPlace.id);
-    currentPlace[field] = cur+1;
-    document.getElementById('verify-count').textContent = `✅ 다녀왔어요 ${currentPlace.verify_yes||0}명  ❌ 없어졌어요 ${currentPlace.verify_no||0}명`;
-    showToast(isVisited ? '✅ 다녀왔어요 인증했어요!' : '❌ 신고해주셔서 감사해요!');
-  } catch(e) { showToast('잠시 후 다시 시도해주세요'); }
-}
-
-// 리뷰
-function openReview() {
-  if (!currentPlace) return;
-  reviewRating=0;
-  document.querySelectorAll('#review-stars .star-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('rv-text').value='';
-  document.getElementById('review-modal').classList.add('open');
-}
-function closeReview() { document.getElementById('review-modal').classList.remove('open'); }
-function setReviewRating(val) {
-  reviewRating=val;
-  document.querySelectorAll('#review-stars .star-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.val)<=val));
-}
-async function submitReview() {
-  const text = document.getElementById('rv-text').value.trim();
-  if (!text) { showToast('리뷰 내용을 입력해주세요'); return; }
-  showLoading(true);
-  try {
-    await db.from('reviews').insert([{nursing_room_id:currentPlace.id, rating:reviewRating||5, comment:text, author_name:'익명'}]);
-    closeReview(); await loadReviews(currentPlace.id);
-    showToast('리뷰가 등록됐어요! 감사합니다 💬');
-  } catch(e) { showToast('등록 중 오류가 발생했어요'); }
+  try{
+    const res=await fetch('https://kauth.kakao.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=authorization_code&client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&code=${code}`});
+    const data=await res.json();
+    if(data.access_token) await fetchKakaoUser(data.access_token);
+  }catch(e){showToast('로그인 중 오류가 발생했어요');}
   showLoading(false);
 }
-
-// 태그
-function openTagAdd() {
-  if (!currentPlace) return;
-  const cur = currentPlace.tags||[];
-  document.querySelectorAll('#add-tags .tag-item').forEach(el=>el.classList.toggle('selected', cur.includes(el.dataset.tag)));
-  document.getElementById('tag-modal').classList.add('open');
+async function fetchKakaoUser(token){
+  const res=await fetch('https://kapi.kakao.com/v2/user/me',{headers:{'Authorization':`Bearer ${token}`}});
+  const data=await res.json();
+  currentUser={id:data.id,name:data.kakao_account?.profile?.nickname||'사용자',avatar:data.kakao_account?.profile?.thumbnail_image_url||'',token};
+  localStorage.setItem('mammazone_user',JSON.stringify(currentUser));
+  updateUserUI();
+  showToast(`${currentUser.name}님 환영해요! 🍼`);
 }
-function closeTagModal() { document.getElementById('tag-modal').classList.remove('open'); }
-async function submitTags() {
-  const selected = [...document.querySelectorAll('#add-tags .tag-item.selected')].map(el=>el.dataset.tag);
-  if (!selected.length) { showToast('태그를 하나 이상 선택해주세요'); return; }
-  showLoading(true);
-  try {
-    await db.from('nursing_room').update({tags:selected}).eq('id', currentPlace.id);
-    currentPlace.tags=selected;
-    document.getElementById('panel-tags').innerHTML = selected.map(t=>`<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('');
-    const idx = allPlaces.findIndex(p=>p.id===currentPlace.id);
-    if (idx>=0) allPlaces[idx].tags=selected;
-    closeTagModal(); showToast('태그가 추가됐어요! 🏷️');
-  } catch(e) { showToast('오류가 발생했어요'); }
-  showLoading(false);
-}
-
-// 등록 모달
-function openRegister() {
-  selectedNearbyPlace=null; selectedLocTab='nearby'; regPhotos=[];
-  document.getElementById('register-modal').classList.add('open');
-  document.getElementById('nearby-list').style.display='none';
-  document.getElementById('nearby-selected').style.display='none';
-  document.getElementById('photo-preview-list').innerHTML='';
-  switchLocTab('nearby');
-}
-function closeRegister() {
-  document.getElementById('register-modal').classList.remove('open');
-  selectedRating=0; setRating(0); regPhotos=[];
-  document.querySelectorAll('#register-tags .tag-item').forEach(el=>el.classList.remove('selected'));
-  ['f-name','f-addr','f-review'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  document.getElementById('photo-preview-list').innerHTML='';
-  if (miniMap) { miniMap = null; miniMarker=null; document.getElementById('mini-map').innerHTML=''; }
-}
-
-function switchLocTab(tab) {
-  selectedLocTab=tab;
-  document.getElementById('tab-nearby').classList.toggle('active', tab==='nearby');
-  document.getElementById('tab-new').classList.toggle('active', tab==='new');
-  document.getElementById('loc-nearby').style.display = tab==='nearby' ? 'block' : 'none';
-  document.getElementById('loc-new').style.display = tab==='new' ? 'block' : 'none';
-
-  if (tab==='new' && !miniMap) {
-    setTimeout(() => {
-      const initMiniMap = (lat, lng) => {
-        miniMap = new kakao.maps.Map(document.getElementById('mini-map'), {
-          center: new kakao.maps.LatLng(lat, lng),
-          level: 4
-        });
-        kakao.maps.event.addListener(miniMap, 'click', e => {
-          newPlaceLat = e.latLng.getLat();
-          newPlaceLng = e.latLng.getLng();
-          if (miniMarker) miniMarker.setMap(null);
-          miniMarker = new kakao.maps.Marker({
-            position: e.latLng,
-            map: miniMap
-          });
-          showToast('위치가 지정됐어요 📌');
-        });
-      };
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          initMiniMap(pos.coords.latitude, pos.coords.longitude);
-        }, () => initMiniMap(37.5665, 126.978), {timeout:3000});
-      } else {
-        initMiniMap(37.5665, 126.978);
-      }
-    }, 100);
+function updateUserUI(){
+  const ok=!!currentUser;
+  document.getElementById('btn-login').style.display=ok?'none':'flex';
+  document.getElementById('user-info').style.display=ok?'flex':'none';
+  if(ok){
+    document.getElementById('user-name').textContent=currentUser.name;
+    if(currentUser.avatar) document.getElementById('user-avatar').src=currentUser.avatar;
+    if(ADMIN_KAKAO_IDS.includes(currentUser.id)) document.getElementById('btn-admin').style.display='flex';
   }
 }
+function kakaoLogout(){currentUser=null;localStorage.removeItem('mammazone_user');updateUserUI();showToast('로그아웃됐어요');}
 
-async function loadNearbyPlaces() {
+// ── 데이터 ──
+async function loadPlaces(){
   showLoading(true);
-  try {
-    let lat=37.5665, lng=126.978;
-    if (navigator.geolocation) {
-      await new Promise(res => navigator.geolocation.getCurrentPosition(pos => {
-        lat=pos.coords.latitude; lng=pos.coords.longitude; res();
-      }, res, {timeout:5000}));
-    }
-    // 반경 2km 내 수유실 필터
-    const nearby = allPlaces.filter(p => {
-      const d = Math.sqrt(Math.pow((p.latitude-lat)*111,2)+Math.pow((p.longitude-lng)*88,2));
-      return d < 2;
-    }).slice(0, 20);
+  try{const{data,error}=await db.from('nursing_room').select('*');if(error)throw error;allPlaces=data||[];}
+  catch(e){allPlaces=[];}
+  showLoading(false);renderMarkers();
+}
 
-    const listEl = document.getElementById('nearby-list');
-    if (nearby.length === 0) {
-      listEl.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text-muted)">주변 2km 내 수유실이 없어요.<br>신규 등록 탭을 이용해주세요!</div>';
-    } else {
-      listEl.innerHTML = nearby.map(p => `
-        <div class="nearby-item" onclick="selectNearbyPlace('${p.id}')">
-          <div class="ni-name">${p.name}</div>
-          <div class="ni-addr">${p.address}</div>
-        </div>`).join('');
-    }
-    listEl.style.display='block';
-  } catch(e) { showToast('주변 수유실을 불러올 수 없어요'); }
+function handleSort(){currentSort=document.getElementById('sort-select').value;renderMarkers();}
+
+function getSortedPlaces(places){
+  const arr=[...places];
+  if(currentSort==='rating') return arr.sort((a,b)=>(b.rating_avg||0)-(a.rating_avg||0));
+  if(currentSort==='review') return arr.sort((a,b)=>(b.review_count||0)-(a.review_count||0));
+  if(currentSort==='distance'&&myLat!==null) return arr.sort((a,b)=>{
+    const da=Math.sqrt(Math.pow((a.latitude-myLat)*111,2)+Math.pow((a.longitude-myLng)*88,2));
+    const db2=Math.sqrt(Math.pow((b.latitude-myLat)*111,2)+Math.pow((b.longitude-myLng)*88,2));
+    return da-db2;
+  });
+  return arr;
+}
+
+function renderMarkers(){
+  clusterer.clear();markers=[];
+  let filtered=allPlaces.filter(p=>{if(!activeFilters.length)return true;return activeFilters.every(f=>(p.tags||[]).includes(f));});
+  filtered=getSortedPlaces(filtered);
+  document.getElementById('count-num').textContent=filtered.length;
+  filtered.forEach(p=>{
+    const color=(p.rating_avg||4)>=4.7?'#1D9E75':(p.rating_avg||4)>=4.2?'#EF9F27':'#E05A3A';
+    const src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44"><path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="${color}"/><circle cx="18" cy="17" r="10" fill="white" opacity="0.95"/><text x="18" y="22" font-size="12" text-anchor="middle">🍼</text></svg>`)));
+    const img=new kakao.maps.MarkerImage(src,new kakao.maps.Size(36,44),{offset:new kakao.maps.Point(18,44)});
+    const m=new kakao.maps.Marker({position:new kakao.maps.LatLng(p.latitude,p.longitude),image:img,title:p.name});
+    kakao.maps.event.addListener(m,'click',()=>showDetail(p));
+    markers.push(m);
+  });
+  clusterer.addMarkers(markers);
+}
+
+// ── 디테일 ──
+async function showDetail(place){
+  currentPlace=place;
+  document.getElementById('panel-name').textContent=place.name;
+  document.getElementById('panel-addr').textContent='📍 '+place.address;
+  document.getElementById('verify-count').textContent=`✅ 다녀왔어요 ${place.verify_yes||0}명  ❌ 없어졌어요 ${place.verify_no||0}명`;
+  const r=place.rating_avg||0;
+  document.getElementById('panel-stars').textContent='★'.repeat(Math.floor(r))+'☆'.repeat(5-Math.floor(r));
+  document.getElementById('panel-rating-num').textContent=r>0?r.toFixed(1):'-';
+  document.getElementById('panel-review-count').textContent=place.review_count?`(${place.review_count}개)`:'';
+  const tags=place.tags||[];
+  document.getElementById('panel-tags').innerHTML=tags.length>0?tags.map(t=>`<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join(''):'<span style="font-size:11px;color:var(--text-muted)">태그 없음</span>';
+  const photosEl=document.getElementById('panel-photos');
+  photosEl.innerHTML=`<div class="photo-add" onclick="document.getElementById('photo-input').click()"><span>📷</span><span>사진 추가</span></div>`;
+  (place.photos||[]).forEach(url=>{const img=document.createElement('img');img.className='photo-thumb';img.src=url;img.onclick=()=>openPhotoViewer(url);photosEl.insertBefore(img,photosEl.firstChild);});
+  await loadReviews(place.id);
+  document.getElementById('detail-panel').classList.add('open');
+  map.panTo(new kakao.maps.LatLng(place.latitude,place.longitude));
+}
+
+async function loadReviews(id){
+  const el=document.getElementById('panel-reviews');
+  try{
+    const{data}=await db.from('reviews').select('*').eq('nursing_room_id',id).order('created_at',{ascending:false}).limit(5);
+    el.innerHTML=data&&data.length>0?data.map(r=>`<div class="review-item"><div class="r-header">${r.author_avatar?`<img class="r-avatar" src="${r.author_avatar}"/>`:'<span style="font-size:18px">👤</span>'}<span class="r-name">${r.author_name||'익명'}</span><span class="r-stars">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</span></div><div class="r-text">${r.comment}</div><div class="r-date">${new Date(r.created_at).toLocaleDateString('ko-KR')}</div></div>`).join(''):'<div id="no-review">아직 리뷰가 없어요. 첫 리뷰를 남겨보세요! 💬</div>';
+  }catch(e){el.innerHTML='';}
+}
+
+function closePanel(){document.getElementById('detail-panel').classList.remove('open');}
+
+function openPhotoViewer(url){document.getElementById('photo-viewer-img').src=url;document.getElementById('photo-viewer').classList.add('open');}
+function closePhotoViewer(){document.getElementById('photo-viewer').classList.remove('open');}
+
+async function handleDetailPhotoUpload(e){
+  if(!currentPlace)return;
+  const files=Array.from(e.target.files);if(!files.length)return;
+  showLoading(true);
+  try{
+    const urls=[];
+    for(const file of files){const ext=file.name.split('.').pop();const path=`${currentPlace.id}/${Date.now()}.${ext}`;const{error}=await db.storage.from('photos').upload(path,file,{upsert:true});if(!error){const{data}=db.storage.from('photos').getPublicUrl(path);urls.push(data.publicUrl);}}
+    if(urls.length){const np=[...(currentPlace.photos||[]),...urls];await db.from('nursing_room').update({photos:np}).eq('id',currentPlace.id);currentPlace.photos=np;const el=document.getElementById('panel-photos');el.innerHTML=`<div class="photo-add" onclick="document.getElementById('photo-input').click()"><span>📷</span><span>사진 추가</span></div>`;np.forEach(url=>{const img=document.createElement('img');img.className='photo-thumb';img.src=url;img.onclick=()=>openPhotoViewer(url);el.insertBefore(img,el.firstChild);});showToast(`사진 ${urls.length}장 등록됐어요! 📷`);}
+  }catch(e){showToast('사진 업로드 중 오류');}
+  showLoading(false);e.target.value='';
+}
+
+function handleRegPhotoSelect(e){regPhotos=[...regPhotos,...Array.from(e.target.files)];renderRegPhotoPreviews();e.target.value='';}
+function renderRegPhotoPreviews(){document.getElementById('photo-preview-list').innerHTML=regPhotos.map((f,i)=>`<div class="preview-item"><img src="${URL.createObjectURL(f)}"/><button class="preview-remove" onclick="removeRegPhoto(${i})">✕</button></div>`).join('');}
+function removeRegPhoto(idx){regPhotos.splice(idx,1);renderRegPhotoPreviews();}
+
+async function verifyPlace(isVisited){
+  if(!currentPlace)return;
+  const field=isVisited?'verify_yes':'verify_no';const cur=currentPlace[field]||0;
+  try{await db.from('nursing_room').update({[field]:cur+1}).eq('id',currentPlace.id);currentPlace[field]=cur+1;document.getElementById('verify-count').textContent=`✅ 다녀왔어요 ${currentPlace.verify_yes||0}명  ❌ 없어졌어요 ${currentPlace.verify_no||0}명`;showToast(isVisited?'✅ 인증했어요!':'❌ 신고 감사해요!');}
+  catch(e){showToast('잠시 후 다시 시도해주세요');}
+}
+
+function openReview(){if(!currentPlace)return;reviewRating=0;document.querySelectorAll('#review-stars .star-btn').forEach(b=>b.classList.remove('active'));document.getElementById('rv-text').value='';document.getElementById('review-login-notice').style.display=currentUser?'none':'block';document.getElementById('review-modal').classList.add('open');}
+function closeReview(){document.getElementById('review-modal').classList.remove('open');}
+function setReviewRating(val){reviewRating=val;document.querySelectorAll('#review-stars .star-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.val)<=val));}
+async function submitReview(){
+  const text=document.getElementById('rv-text').value.trim();if(!text){showToast('리뷰 내용을 입력해주세요');return;}
+  showLoading(true);
+  try{
+    await db.from('reviews').insert([{nursing_room_id:currentPlace.id,rating:reviewRating||5,comment:text,author_name:currentUser?currentUser.name:'익명',author_avatar:currentUser?currentUser.avatar:null,kakao_id:currentUser?currentUser.id:null}]);
+    const nc=(currentPlace.review_count||0)+1;const nr=((currentPlace.rating_avg||0)*(nc-1)+(reviewRating||5))/nc;
+    await db.from('nursing_room').update({review_count:nc,rating_avg:parseFloat(nr.toFixed(1))}).eq('id',currentPlace.id);
+    currentPlace.review_count=nc;currentPlace.rating_avg=parseFloat(nr.toFixed(1));
+    closeReview();await loadReviews(currentPlace.id);showToast('리뷰가 등록됐어요! 💬');
+  }catch(e){showToast('등록 중 오류가 발생했어요');}
   showLoading(false);
 }
 
-function selectNearbyPlace(id) {
-  selectedNearbyPlace = allPlaces.find(p => p.id == id || p.id === id);
-  if (!selectedNearbyPlace) return;
-  document.querySelectorAll('.nearby-item').forEach(el => el.classList.remove('selected-item'));
-  event.currentTarget.classList.add('selected-item');
-  const selEl = document.getElementById('nearby-selected');
-  selEl.textContent = `✅ 선택됨: ${selectedNearbyPlace.name}`;
-  selEl.style.display='block';
-}
-
-function setRating(val) {
-  selectedRating=val;
-  document.querySelectorAll('#reg-stars .star-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.val)<=val));
-}
-
-async function submitPlace() {
-  const tags = [...document.querySelectorAll('#register-tags .tag-item.selected')].map(el=>el.dataset.tag);
-  const review = document.getElementById('f-review').value.trim();
-
+function openTagAdd(){if(!currentPlace)return;const cur=currentPlace.tags||[];document.querySelectorAll('#add-tags .tag-item').forEach(el=>el.classList.toggle('selected',cur.includes(el.dataset.tag)));document.getElementById('tag-modal').classList.add('open');}
+function closeTagModal(){document.getElementById('tag-modal').classList.remove('open');}
+async function submitTags(){
+  const sel=[...document.querySelectorAll('#add-tags .tag-item.selected')].map(el=>el.dataset.tag);if(!sel.length){showToast('태그를 선택해주세요');return;}
   showLoading(true);
-  try {
-    // 사진 업로드
-    const photoUrls = [];
-    for (const file of regPhotos) {
-      const ext = file.name.split('.').pop();
-      const path = `new/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const {error} = await db.storage.from('photos').upload(path, file, {upsert:true});
-      if (!error) {
-        const {data} = db.storage.from('photos').getPublicUrl(path);
-        photoUrls.push(data.publicUrl);
-      }
-    }
-
-    if (selectedLocTab === 'nearby' && selectedNearbyPlace) {
-      // 기존 수유실에 정보 추가
-      const mergedTags = [...new Set([...(selectedNearbyPlace.tags||[]), ...tags])];
-      await db.from('nursing_room').update({
-        tags: mergedTags,
-        rating_avg: selectedRating || selectedNearbyPlace.rating_avg,
-        photos: [...(selectedNearbyPlace.photos||[]), ...photoUrls]
-      }).eq('id', selectedNearbyPlace.id);
-      if (review) {
-        await db.from('reviews').insert([{nursing_room_id:selectedNearbyPlace.id, rating:selectedRating||5, comment:review, author_name:'익명'}]);
-      }
-      closeRegister(); await loadPlaces();
-      showToast('정보가 추가됐어요! 감사합니다 🍼');
-    } else if (selectedLocTab === 'new') {
-      const name = document.getElementById('f-name').value.trim();
-      const addr = document.getElementById('f-addr').value.trim();
-      if (!name || !addr) { showToast('장소명과 주소는 필수예요!'); showLoading(false); return; }
-      const lat = newPlaceLat || 37.5665 + (Math.random()-0.5)*0.05;
-      const lng = newPlaceLng || 126.978 + (Math.random()-0.5)*0.05;
-      const {data, error} = await db.from('nursing_room').insert([{
-        name, address:addr, latitude:lat, longitude:lng,
-        rating_avg:selectedRating||4.0, review, tags,
-        verify_yes:1, verify_no:0, photos:photoUrls
-      }]).select();
-      if (error) throw error;
-      if (data) allPlaces.push(data[0]);
-      closeRegister(); renderMarkers();
-      showToast('수유실이 등록됐어요! 감사합니다 🍼');
-    } else {
-      showToast('위치를 선택하거나 신규 정보를 입력해주세요');
-      showLoading(false); return;
-    }
-  } catch(e) { showToast('등록 중 오류가 발생했어요'); }
+  try{await db.from('nursing_room').update({tags:sel}).eq('id',currentPlace.id);currentPlace.tags=sel;document.getElementById('panel-tags').innerHTML=sel.map(t=>`<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('');const idx=allPlaces.findIndex(p=>p.id===currentPlace.id);if(idx>=0)allPlaces[idx].tags=sel;closeTagModal();showToast('태그가 추가됐어요! 🏷️');}
+  catch(e){showToast('오류가 발생했어요');}
   showLoading(false);
 }
 
-// 검색
-function setupSearch() {
-  const geocoder = new kakao.maps.services.Geocoder();
-  const ps = new kakao.maps.services.Places();
-  document.getElementById('search-input').addEventListener('input', e => {
-    const q = e.target.value.trim().toLowerCase();
-    if (!q) { renderMarkers(); return; }
-    markers.forEach(m => m.setMap(null)); markers=[];
-    const found = allPlaces.filter(p=>p.name?.toLowerCase().includes(q)||p.address?.toLowerCase().includes(q));
+function openRegister(){selectedNearbyPlace=null;selectedLocTab='nearby';regPhotos=[];document.getElementById('register-modal').classList.add('open');document.getElementById('nearby-list').style.display='none';document.getElementById('nearby-selected').style.display='none';document.getElementById('photo-preview-list').innerHTML='';switchLocTab('nearby');}
+function closeRegister(){document.getElementById('register-modal').classList.remove('open');selectedRating=0;setRating(0);regPhotos=[];document.querySelectorAll('#register-tags .tag-item').forEach(el=>el.classList.remove('selected'));['f-name','f-addr','f-review'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});document.getElementById('photo-preview-list').innerHTML='';if(miniMap){miniMap=null;miniMarker=null;document.getElementById('mini-map').innerHTML='';}}
+
+function switchLocTab(tab){
+  selectedLocTab=tab;
+  document.getElementById('tab-nearby').classList.toggle('active',tab==='nearby');
+  document.getElementById('tab-new').classList.toggle('active',tab==='new');
+  document.getElementById('loc-nearby').style.display=tab==='nearby'?'block':'none';
+  document.getElementById('loc-new').style.display=tab==='new'?'block':'none';
+  if(tab==='new'&&!miniMap){setTimeout(()=>{const f=(lat,lng)=>{miniMap=new kakao.maps.Map(document.getElementById('mini-map'),{center:new kakao.maps.LatLng(lat,lng),level:4});kakao.maps.event.addListener(miniMap,'click',e=>{newPlaceLat=e.latLng.getLat();newPlaceLng=e.latLng.getLng();if(miniMarker)miniMarker.setMap(null);miniMarker=new kakao.maps.Marker({position:e.latLng,map:miniMap});showToast('위치가 지정됐어요 📌');});};if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>f(p.coords.latitude,p.coords.longitude),()=>f(37.5665,126.978),{timeout:3000});else f(37.5665,126.978);},100);}
+}
+
+async function loadNearbyPlaces(){
+  showLoading(true);
+  try{
+    let lat=myLat||37.5665,lng=myLng||126.978;
+    if(!myLat&&navigator.geolocation)await new Promise(res=>navigator.geolocation.getCurrentPosition(p=>{lat=p.coords.latitude;lng=p.coords.longitude;res();},res,{timeout:5000}));
+    const nearby=allPlaces.filter(p=>{const d=Math.sqrt(Math.pow((p.latitude-lat)*111,2)+Math.pow((p.longitude-lng)*88,2));return d<2;}).slice(0,20);
+    const el=document.getElementById('nearby-list');
+    el.innerHTML=nearby.length===0?'<div style="padding:14px;text-align:center;font-size:12px;color:var(--text-muted)">주변 2km 내 수유실이 없어요.<br>신규 등록 탭을 이용해주세요!</div>':nearby.map(p=>`<div class="nearby-item" onclick="selectNearbyPlace('${p.id}')"><div class="ni-name">${p.name}</div><div class="ni-addr">${p.address}</div></div>`).join('');
+    el.style.display='block';
+  }catch(e){showToast('불러올 수 없어요');}
+  showLoading(false);
+}
+
+function selectNearbyPlace(id){selectedNearbyPlace=allPlaces.find(p=>p.id==id||p.id===id);if(!selectedNearbyPlace)return;document.querySelectorAll('.nearby-item').forEach(el=>el.classList.remove('selected-item'));event.currentTarget.classList.add('selected-item');const el=document.getElementById('nearby-selected');el.textContent=`✅ 선택됨: ${selectedNearbyPlace.name}`;el.style.display='block';}
+function setRating(val){selectedRating=val;document.querySelectorAll('#reg-stars .star-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.val)<=val));}
+
+async function submitPlace(){
+  const tags=[...document.querySelectorAll('#register-tags .tag-item.selected')].map(el=>el.dataset.tag);
+  const review=document.getElementById('f-review').value.trim();
+  showLoading(true);
+  try{
+    const pu=[];
+    for(const file of regPhotos){const ext=file.name.split('.').pop();const path=`new/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;const{error}=await db.storage.from('photos').upload(path,file,{upsert:true});if(!error){const{data}=db.storage.from('photos').getPublicUrl(path);pu.push(data.publicUrl);}}
+    if(selectedLocTab==='nearby'&&selectedNearbyPlace){
+      const mt=[...new Set([...(selectedNearbyPlace.tags||[]),...tags])];
+      await db.from('nursing_room').update({tags:mt,rating_avg:selectedRating||selectedNearbyPlace.rating_avg,photos:[...(selectedNearbyPlace.photos||[]),...pu]}).eq('id',selectedNearbyPlace.id);
+      if(review)await db.from('reviews').insert([{nursing_room_id:selectedNearbyPlace.id,rating:selectedRating||5,comment:review,author_name:currentUser?currentUser.name:'익명',author_avatar:currentUser?currentUser.avatar:null}]);
+      closeRegister();await loadPlaces();showToast('정보가 추가됐어요! 🍼');
+    }else if(selectedLocTab==='new'){
+      const name=document.getElementById('f-name').value.trim();const addr=document.getElementById('f-addr').value.trim();
+      if(!name||!addr){showToast('장소명과 주소는 필수예요!');showLoading(false);return;}
+      const lat=newPlaceLat||37.5665+(Math.random()-0.5)*0.05;const lng=newPlaceLng||126.978+(Math.random()-0.5)*0.05;
+      const{data,error}=await db.from('nursing_room').insert([{name,address:addr,latitude:lat,longitude:lng,rating_avg:selectedRating||4.0,tags,verify_yes:1,verify_no:0,photos:pu}]).select();
+      if(error)throw error;if(data)allPlaces.push(data[0]);
+      closeRegister();renderMarkers();showToast('수유실이 등록됐어요! 🍼');
+    }else{showToast('위치를 선택하거나 신규 정보를 입력해주세요');showLoading(false);return;}
+  }catch(e){showToast('등록 중 오류가 발생했어요');}
+  showLoading(false);
+}
+
+// ── 제보 ──
+function openReport(){selectedReportType=null;document.querySelectorAll('.report-type-btn').forEach(b=>b.classList.remove('selected'));document.getElementById('report-place').value='';document.getElementById('report-desc').value='';document.getElementById('report-modal').classList.add('open');}
+function closeReport(){document.getElementById('report-modal').classList.remove('open');}
+function selectReportType(type){selectedReportType=type;document.querySelectorAll('.report-type-btn').forEach(b=>b.classList.toggle('selected',b.dataset.type===type));}
+async function submitReport(){
+  const place=document.getElementById('report-place').value.trim();const desc=document.getElementById('report-desc').value.trim();
+  if(!selectedReportType){showToast('제보 유형을 선택해주세요');return;}if(!desc){showToast('상세 내용을 입력해주세요');return;}
+  showLoading(true);
+  try{await db.from('reports').insert([{type:selectedReportType,place_name:place,description:desc,reporter_name:currentUser?currentUser.name:'익명',kakao_id:currentUser?currentUser.id:null,status:'pending'}]);closeReport();showToast('제보해주셔서 감사해요! 🙏');}
+  catch(e){showToast('제보 중 오류가 발생했어요');}
+  showLoading(false);
+}
+
+// ── 관리자 ──
+function openAdmin(){if(!currentUser||!ADMIN_KAKAO_IDS.includes(currentUser.id)){showToast('관리자만 접근할 수 있어요');return;}document.getElementById('admin-modal').classList.add('open');switchAdminTab('places');}
+function closeAdmin(){document.getElementById('admin-modal').classList.remove('open');}
+async function switchAdminTab(tab){
+  document.querySelectorAll('.admin-tab').forEach((b,i)=>b.classList.toggle('active',['places','reports','reviews'][i]===tab));
+  document.getElementById('admin-content').innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px;">불러오는 중...</div>';
+  if(tab==='places')await loadAdminPlaces();
+  else if(tab==='reports')await loadAdminReports();
+  else await loadAdminReviews();
+}
+async function loadAdminPlaces(){
+  const{data}=await db.from('nursing_room').select('*').order('created_at',{ascending:false}).limit(30);
+  document.getElementById('admin-content').innerHTML=(data||[]).map(p=>`<div class="admin-item"><div class="admin-item-name">${p.name}</div><div class="admin-item-addr">${p.address} · 평점 ${p.rating_avg||'-'} · 리뷰 ${p.review_count||0}개</div><div class="admin-item-actions"><button class="admin-btn view" onclick="adminViewPlace(${p.id})">지도보기</button><button class="admin-btn delete" onclick="adminDeletePlace(${p.id})">삭제</button></div></div>`).join('')||'<div style="text-align:center;padding:20px;font-size:13px;color:var(--text-muted)">등록된 수유실이 없어요</div>';
+}
+async function loadAdminReports(){
+  const{data}=await db.from('reports').select('*').eq('status','pending').order('created_at',{ascending:false}).limit(30);
+  const tl={missing:'없어짐',new_area:'지역필요',wrong_info:'정보오류',new_found:'새발견'};
+  document.getElementById('admin-content').innerHTML=(data||[]).map(r=>`<div class="report-item"><span class="report-item-type ${r.type==='missing'?'missing':r.type==='new_found'?'new':'wrong'}">${tl[r.type]||r.type}</span><div style="font-size:12px;font-weight:500;margin-bottom:3px;">${r.place_name||'장소 미입력'} · ${r.reporter_name}</div><div class="report-item-desc">${r.description}</div><div style="display:flex;gap:6px;"><button class="admin-btn approve" onclick="adminResolveReport(${r.id})">처리완료</button><button class="admin-btn delete" onclick="adminDeleteReport(${r.id})">삭제</button></div></div>`).join('')||'<div style="text-align:center;padding:20px;font-size:13px;color:var(--text-muted)">제보가 없어요</div>';
+}
+async function loadAdminReviews(){
+  const{data}=await db.from('reviews').select('*').order('created_at',{ascending:false}).limit(30);
+  document.getElementById('admin-content').innerHTML=(data||[]).map(r=>`<div class="admin-item"><div class="admin-item-name">${r.author_name||'익명'} · ${'★'.repeat(r.rating||0)}</div><div class="admin-item-addr" style="margin-bottom:6px;">${r.comment}</div><div class="admin-item-actions"><button class="admin-btn delete" onclick="adminDeleteReview(${r.id})">삭제</button></div></div>`).join('')||'<div style="text-align:center;padding:20px;font-size:13px;color:var(--text-muted)">리뷰가 없어요</div>';
+}
+function adminViewPlace(id){const p=allPlaces.find(x=>x.id===id);if(p){closeAdmin();showDetail(p);}}
+async function adminDeletePlace(id){if(!confirm('정말 삭제할까요?'))return;await db.from('nursing_room').delete().eq('id',id);allPlaces=allPlaces.filter(p=>p.id!==id);renderMarkers();loadAdminPlaces();showToast('삭제됐어요');}
+async function adminResolveReport(id){await db.from('reports').update({status:'resolved'}).eq('id',id);loadAdminReports();showToast('처리 완료됐어요');}
+async function adminDeleteReport(id){await db.from('reports').delete().eq('id',id);loadAdminReports();showToast('삭제됐어요');}
+async function adminDeleteReview(id){if(!confirm('이 리뷰를 삭제할까요?'))return;await db.from('reviews').delete().eq('id',id);loadAdminReviews();showToast('삭제됐어요');}
+
+// ── 검색 ──
+function setupSearch(){
+  const ps=new kakao.maps.services.Places();
+  document.getElementById('search-input').addEventListener('input',e=>{
+    const q=e.target.value.trim().toLowerCase();if(!q){renderMarkers();return;}
+    clusterer.clear();markers=[];
+    const found=allPlaces.filter(p=>p.name?.toLowerCase().includes(q)||p.address?.toLowerCase().includes(q));
     document.getElementById('count-num').textContent=found.length;
-    found.forEach(p => {
-      const markerImageSrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(
-        `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">
-          <path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="#1D9E75"/>
-          <circle cx="18" cy="17" r="10" fill="white" opacity="0.95"/>
-          <text x="18" y="22" font-size="12" text-anchor="middle">🍼</text>
-        </svg>`
-      )));
-      const markerImage = new kakao.maps.MarkerImage(markerImageSrc, new kakao.maps.Size(36,44), {offset: new kakao.maps.Point(18,44)});
-      const marker = new kakao.maps.Marker({map, position: new kakao.maps.LatLng(p.latitude, p.longitude), image: markerImage, title: p.name});
-      kakao.maps.event.addListener(marker, 'click', () => showDetail(p));
-      markers.push(marker);
-    });
-    // 결과가 없으면 카카오 장소 검색으로 지도 이동
-    if (!found.length && q.length > 1) {
-      ps.keywordSearch(q, (result, status) => {
-        if (status === kakao.maps.services.Status.OK && result.length > 0) {
-          map.setCenter(new kakao.maps.LatLng(result[0].y, result[0].x));
-          map.setLevel(5);
-        }
-      });
-    }
+    found.forEach(p=>{const src='data:image/svg+xml;base64,'+btoa(unescape(encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44"><path d="M18 0 C8 0 0 8 0 18 C0 30 18 44 18 44 C18 44 36 30 36 18 C36 8 28 0 18 0Z" fill="#1D9E75"/><circle cx="18" cy="17" r="10" fill="white" opacity="0.95"/><text x="18" y="22" font-size="12" text-anchor="middle">🍼</text></svg>`)));const img=new kakao.maps.MarkerImage(src,new kakao.maps.Size(36,44),{offset:new kakao.maps.Point(18,44)});const m=new kakao.maps.Marker({position:new kakao.maps.LatLng(p.latitude,p.longitude),image:img,title:p.name});kakao.maps.event.addListener(m,'click',()=>showDetail(p));markers.push(m);});
+    clusterer.addMarkers(markers);
+    if(!found.length&&q.length>1)ps.keywordSearch(q,(result,status)=>{if(status===kakao.maps.services.Status.OK&&result.length>0){map.setCenter(new kakao.maps.LatLng(result[0].y,result[0].x));map.setLevel(5);}});
   });
 }
 
-// 필터 (중복 선택)
-function setupFilters() {
-  document.querySelectorAll('.filter-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const filter = btn.dataset.filter;
-      if (filter === 'all') {
-        activeFilters=[];
-        document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-      } else {
-        document.querySelector('.filter-chip[data-filter="all"]').classList.remove('active');
-        btn.classList.toggle('active');
-        if (activeFilters.includes(filter)) {
-          activeFilters = activeFilters.filter(f=>f!==filter);
-        } else {
-          activeFilters.push(filter);
-        }
-        if (!activeFilters.length) {
-          document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');
-        }
-      }
+function setupFilters(){
+  document.querySelectorAll('.filter-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const f=btn.dataset.filter;
+      if(f==='all'){activeFilters=[];document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+      else{document.querySelector('.filter-chip[data-filter="all"]').classList.remove('active');btn.classList.toggle('active');if(activeFilters.includes(f))activeFilters=activeFilters.filter(x=>x!==f);else activeFilters.push(f);if(!activeFilters.length)document.querySelector('.filter-chip[data-filter="all"]').classList.add('active');}
       renderMarkers();
     });
   });
 }
 
-function setupTagSelectors() {
-  ['register-tags','add-tags'].forEach(id => {
-    document.getElementById(id)?.querySelectorAll('.tag-item').forEach(el => {
-      el.addEventListener('click', ()=>el.classList.toggle('selected'));
-    });
-  });
+function setupTagSelectors(){['register-tags','add-tags'].forEach(id=>{document.getElementById(id)?.querySelectorAll('.tag-item').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('selected')));});}
+
+function goMyLocation(){
+  if(!navigator.geolocation){showToast('위치 정보를 사용할 수 없어요');return;}
+  navigator.geolocation.getCurrentPosition(pos=>{myLat=pos.coords.latitude;myLng=pos.coords.longitude;const c=new kakao.maps.LatLng(myLat,myLng);map.setCenter(c);map.setLevel(4);if(currentSort==='distance')renderMarkers();showToast('현재 위치로 이동했어요 📍');},()=>showToast('위치 정보 접근이 거부됐어요'));
 }
 
-function goMyLocation() {
-  if (!navigator.geolocation) { showToast('위치 정보를 사용할 수 없어요'); return; }
-  navigator.geolocation.getCurrentPosition(pos => {
-    const center = new kakao.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-    map.setCenter(center);
-    map.setLevel(4);
-    showToast('현재 위치로 이동했어요 📍');
-  }, ()=>showToast('위치 정보 접근이 거부됐어요'));
-}
-
-function navigate() {
-  if (!currentPlace) return;
-  window.open(`https://map.kakao.com/link/to/${encodeURIComponent(currentPlace.name)},${currentPlace.latitude},${currentPlace.longitude}`,'_blank');
-}
-
-function scrollFilters(amount) { document.getElementById('filters').scrollBy({left:amount, behavior:'smooth'}); }
-function showLoading(v) { document.getElementById('loading').classList.toggle('show',v); }
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
+function navigate(){if(!currentPlace)return;window.open(`https://map.kakao.com/link/to/${encodeURIComponent(currentPlace.name)},${currentPlace.latitude},${currentPlace.longitude}`,'_blank');}
+function scrollFilters(amount){document.getElementById('filters').scrollBy({left:amount,behavior:'smooth'});}
+function showLoading(v){document.getElementById('loading').classList.toggle('show',v);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
 </html>
