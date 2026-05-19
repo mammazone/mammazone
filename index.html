@@ -18,10 +18,9 @@
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
   <script>
-    window.kakaoMapLoaded = false;
     window.kakaoMapReady = new Promise(resolve => { window._kakaoMapResolve = resolve; });
   </script>
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services&autoload=false"></script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services&autoload=false" onload="kakao.maps.load(() => window._kakaoMapResolve())"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
@@ -396,10 +395,9 @@ const TAG_COLORS = {
   tag_private:'coral', tag_highchair:'amber', tag_microwave:'gray', tag_babybed:'blue'
 };
 
-window.addEventListener('load', () => {
-  kakao.maps.load(async () => {
-    initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
-  });
+window.addEventListener('load', async () => {
+  await window.kakaoMapReady;
+  initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
 });
 
 function initMap() {
