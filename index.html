@@ -18,6 +18,7 @@
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services,clusterer"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
@@ -174,7 +175,7 @@
     <div id="header-top">
       <div id="logo"><div id="logo-icon">🍼</div>맘마존</div>
       <div id="header-right">
-        <button id="btn-login" onclick="kakaoLogin()">카카오 로그인</button>
+        <button id="btn-login" onclick="kakaoLogin()" style="background:#FEE500;color:#3C1E1E;border:none;border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:5px;"><img src="https://developers.kakao.com/assets/img/about/logos/kakaologin/kakao_login_small.png" style="height:16px;" onerror="this.style.display='none'" />카카오 로그인</button>
         <div id="user-info">
           <img id="user-avatar" src="" alt="프로필" />
           <span id="user-name"></span>
@@ -448,10 +449,8 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 // ★ 여기 두 곳 교체하세요 ★
-const KAKAO_REST_KEY='46c844877289f9837eb14985c02b34d0'; // 카카오 콘솔 > 앱 > 플랫폼 키 > REST API 키
-const ADMIN_KAKAO_IDS=[01062436293]; // 관리자 카카오 ID (숫자). 예: [1234567890]
-
-const REDIRECT_URI='https://mammazone.vercel.app';
+const KAKAO_JS_KEY='713978c1dc909724be7a5f36be971082'; // JavaScript 키 (이미 맞음)
+const ADMIN_KAKAO_IDS=[]; // 관리자 카카오 ID (숫자). 예: [1234567890]
 
 let map,miniMap,miniMarker,clusterer;
 let markers=[],allPlaces=[],activeFilters=[],selectedRating=0,reviewRating=0,currentPlace=null;
@@ -463,6 +462,8 @@ const TAG_COLORS={tag_sofa:'green',tag_diaper:'blue',tag_hotwater:'amber',tag_si
 
 window.addEventListener('load',()=>{
   setTimeout(async()=>{
+    // 카카오 JS SDK 초기화
+    Kakao.init(KAKAO_JS_KEY);
     initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors(); checkKakaoLogin();
   },100);
 });
@@ -470,40 +471,38 @@ window.addEventListener('load',()=>{
 function initMap(){
   map=new kakao.maps.Map(document.getElementById('map'),{center:new kakao.maps.LatLng(37.5665,126.978),level:7});
   kakao.maps.event.addListener(map,'click',closePanel);
-  clusterer=new kakao.maps.MarkerClusterer({map,averageCenter:true,minLevel:3,styles:[
+  clusterer=new kakao.maps.MarkerClusterer({map,averageCenter:true,minLevel:5,styles:[
     {width:'44px',height:'44px',background:'#1D9E75',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'44px',fontSize:'13px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
     {width:'54px',height:'54px',background:'#EF9F27',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'54px',fontSize:'15px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
     {width:'64px',height:'64px',background:'#E05A3A',borderRadius:'50%',color:'#fff',textAlign:'center',lineHeight:'64px',fontSize:'17px',fontWeight:'700',border:'3px solid white',boxShadow:'0 2px 10px rgba(0,0,0,0.25)',cursor:'pointer'},
   ]});
 }
 
-// ── 카카오 로그인 ──
+// ── 카카오 로그인 (JS SDK) ──
 function checkKakaoLogin(){
-  const params=new URLSearchParams(window.location.search);
-  const code=params.get('code');
-  if(code){window.history.replaceState({},'','/');fetchKakaoToken(code);return;}
   const saved=localStorage.getItem('mammazone_user');
   if(saved){currentUser=JSON.parse(saved);updateUserUI();}
 }
 function kakaoLogin(){
-  window.location.href=`https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
-}
-async function fetchKakaoToken(code){
-  showLoading(true);
-  try{
-    const res=await fetch('https://kauth.kakao.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:`grant_type=authorization_code&client_id=${KAKAO_REST_KEY}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&code=${code}`});
-    const data=await res.json();
-    if(data.access_token) await fetchKakaoUser(data.access_token);
-  }catch(e){showToast('로그인 중 오류가 발생했어요');}
-  showLoading(false);
-}
-async function fetchKakaoUser(token){
-  const res=await fetch('https://kapi.kakao.com/v2/user/me',{headers:{'Authorization':`Bearer ${token}`}});
-  const data=await res.json();
-  currentUser={id:data.id,name:data.kakao_account?.profile?.nickname||'사용자',avatar:data.kakao_account?.profile?.thumbnail_image_url||'',token};
-  localStorage.setItem('mammazone_user',JSON.stringify(currentUser));
-  updateUserUI();
-  showToast(`${currentUser.name}님 환영해요! 🍼`);
+  Kakao.Auth.login({
+    success(authObj){
+      Kakao.API.request({
+        url:'/v2/user/me',
+        success(res){
+          currentUser={
+            id:res.id,
+            name:res.kakao_account?.profile?.nickname||res.properties?.nickname||'사용자',
+            avatar:res.kakao_account?.profile?.thumbnail_image_url||res.properties?.thumbnail_image||'',
+          };
+          localStorage.setItem('mammazone_user',JSON.stringify(currentUser));
+          updateUserUI();
+          showToast(`${currentUser.name}님 환영해요! 🍼`);
+        },
+        fail(err){showToast('사용자 정보를 가져올 수 없어요');}
+      });
+    },
+    fail(err){showToast('로그인에 실패했어요');}
+  });
 }
 function updateUserUI(){
   const ok=!!currentUser;
@@ -515,7 +514,11 @@ function updateUserUI(){
     if(ADMIN_KAKAO_IDS.includes(currentUser.id)) document.getElementById('btn-admin').style.display='flex';
   }
 }
-function kakaoLogout(){currentUser=null;localStorage.removeItem('mammazone_user');updateUserUI();showToast('로그아웃됐어요');}
+function kakaoLogout(){
+  if(Kakao.Auth.getAccessToken()){
+    Kakao.Auth.logout(()=>{currentUser=null;localStorage.removeItem('mammazone_user');updateUserUI();showToast('로그아웃됐어요');});
+  }else{currentUser=null;localStorage.removeItem('mammazone_user');updateUserUI();showToast('로그아웃됐어요');}
+}
 
 // ── 데이터 ──
 async function loadPlaces(){
