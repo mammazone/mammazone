@@ -17,7 +17,11 @@
   <meta name="theme-color" content="#1D9E75" />
   <link rel="apple-touch-icon" href="icon.png" />
   <link rel="icon" type="image/png" href="icon.png" />
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services"></script>
+  <script>
+    window.kakaoMapLoaded = false;
+    window.kakaoMapReady = new Promise(resolve => { window._kakaoMapResolve = resolve; });
+  </script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=713978c1dc909724be7a5f36be971082&libraries=services&autoload=false"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Do+Hyeon&display=swap" rel="stylesheet">
@@ -109,6 +113,7 @@
     .modal-actions{display:grid;grid-template-columns:1fr 2fr;gap:8px;margin-top:20px;}
     .modal-btn{padding:15px;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:var(--white);font-size:15px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);}
     .modal-btn.primary{background:var(--green);color:white;border-color:var(--green);}
+    /* 위치 선택 */
     .location-tabs{display:flex;gap:8px;margin-bottom:14px;}
     .loc-tab{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;text-align:center;font-family:'Noto Sans KR',sans-serif;background:var(--white);color:var(--text-muted);}
     .loc-tab.active{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);}
@@ -121,10 +126,12 @@
     .nearby-item.selected-item{background:var(--green-light);border-left:3px solid var(--green);}
     #mini-map{width:100%;height:200px;border-radius:var(--radius-sm);border:1.5px solid var(--border);overflow:hidden;margin-top:8px;}
     .notice-box{background:#FFF8E7;border:1px solid #F5CC6E;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:12px;color:#7A5C00;line-height:1.6;}
+    /* 사진 업로드 미리보기 */
     #photo-preview-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
     .preview-item{position:relative;width:72px;height:72px;}
     .preview-item img{width:72px;height:72px;border-radius:8px;object-fit:cover;}
     .preview-remove{position:absolute;top:-6px;right:-6px;width:20px;height:20px;background:#E05A3A;color:white;border-radius:50%;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+    /* 사진 전체보기 */
     #photo-viewer{display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.9);align-items:center;justify-content:center;}
     #photo-viewer.open{display:flex;}
     #photo-viewer img{max-width:95vw;max-height:90vh;border-radius:8px;}
@@ -211,6 +218,8 @@
 <div class="modal-wrap" id="register-modal">
   <div class="modal-box">
     <h2>🍼 수유실 등록하기</h2>
+
+    <!-- 위치 선택 탭 -->
     <div class="form-group">
       <label class="form-label">위치 선택 방법</label>
       <div class="location-tabs">
@@ -218,6 +227,8 @@
         <button class="loc-tab" id="tab-new" onclick="switchLocTab('new')">✏️ 신규 등록</button>
       </div>
     </div>
+
+    <!-- 내 주변 선택 -->
     <div id="loc-nearby">
       <div class="form-group">
         <label class="form-label">주변 수유실 선택 <span style="color:var(--text-muted);font-weight:400">(이미 등록된 곳에 정보 추가)</span></label>
@@ -226,6 +237,8 @@
         <div id="nearby-selected" style="display:none;margin-top:8px;padding:10px 12px;background:var(--green-light);border-radius:var(--radius-sm);font-size:13px;color:var(--green-dark);font-weight:500;"></div>
       </div>
     </div>
+
+    <!-- 신규 등록 -->
     <div id="loc-new" style="display:none">
       <div class="form-group">
         <label class="form-label">장소명 *</label>
@@ -238,6 +251,8 @@
         <p style="font-size:11px;color:var(--text-muted);margin-top:6px;">📌 지도를 클릭하면 위치가 지정돼요</p>
       </div>
     </div>
+
+    <!-- 공통 정보 -->
     <div class="form-group">
       <label class="form-label">시설 태그</label>
       <div class="tag-grid" id="register-tags">
@@ -258,6 +273,7 @@
         <span class="tag-item" data-tag="tag_babybed">🛏️ 아기침대</span>
       </div>
     </div>
+
     <div class="form-group">
       <label class="form-label">청결도 평점</label>
       <div class="star-rating" id="reg-stars">
@@ -268,16 +284,20 @@
         <button class="star-btn" data-val="5" onclick="setRating(5)">★</button>
       </div>
     </div>
+
     <div class="form-group">
       <label class="form-label">한줄 리뷰</label>
       <textarea class="form-textarea" id="f-review" placeholder="다른 엄마들에게 알려주세요 😊"></textarea>
     </div>
+
+    <!-- 사진 업로드 -->
     <div class="form-group">
       <label class="form-label">사진 추가 (선택)</label>
       <div class="notice-box">📷 사진 촬영 전 꼭 확인해주세요!<br>다른 이용자가 있을 경우 촬영을 삼가주세요. 개인정보 보호를 위해 사람이 포함된 사진은 등록이 제한될 수 있어요.</div>
       <button class="modal-btn" style="width:100%;" onclick="document.getElementById('reg-photo-input').click()">📷 사진 선택하기</button>
       <div id="photo-preview-list"></div>
     </div>
+
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeRegister()">취소</button>
       <button class="modal-btn primary" onclick="submitPlace()">등록하기 ✓</button>
@@ -376,8 +396,10 @@ const TAG_COLORS = {
   tag_private:'coral', tag_highchair:'amber', tag_microwave:'gray', tag_babybed:'blue'
 };
 
-window.addEventListener('load', async () => {
-  initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
+window.addEventListener('load', () => {
+  kakao.maps.load(async () => {
+    initMap(); await loadPlaces(); setupSearch(); setupFilters(); setupTagSelectors();
+  });
 });
 
 function initMap() {
@@ -446,6 +468,8 @@ async function showDetail(place) {
   document.getElementById('panel-tags').innerHTML = tags.length > 0
     ? tags.map(t=>`<span class="tag ${TAG_COLORS[t]||'gray'}">${TAG_MAP[t]||t}</span>`).join('')
     : '<span style="font-size:12px;color:var(--text-muted)">태그 없음 — 태그 버튼으로 추가해주세요!</span>';
+
+  // 사진
   const photosEl = document.getElementById('panel-photos');
   const photos = place.photos||[];
   photosEl.innerHTML = `<div class="photo-add" onclick="document.getElementById('photo-input').click()"><span>📷</span><span>사진 추가</span></div>`;
@@ -455,6 +479,7 @@ async function showDetail(place) {
     img.onclick = () => openPhotoViewer(url);
     photosEl.insertBefore(img, photosEl.firstChild);
   });
+
   await loadReviews(place.id);
   document.getElementById('detail-panel').classList.add('open');
 }
@@ -471,12 +496,14 @@ async function loadReviews(placeId) {
 
 function closePanel() { document.getElementById('detail-panel').classList.remove('open'); }
 
+// 사진 전체보기
 function openPhotoViewer(url) {
   document.getElementById('photo-viewer-img').src = url;
   document.getElementById('photo-viewer').classList.add('open');
 }
 function closePhotoViewer() { document.getElementById('photo-viewer').classList.remove('open'); }
 
+// 상세화면 사진 업로드
 async function handleDetailPhotoUpload(e) {
   if (!currentPlace) return;
   const files = Array.from(e.target.files);
@@ -513,6 +540,7 @@ async function handleDetailPhotoUpload(e) {
   e.target.value='';
 }
 
+// 등록 모달 사진 선택 (미리보기)
 function handleRegPhotoSelect(e) {
   const files = Array.from(e.target.files);
   regPhotos = [...regPhotos, ...files];
@@ -531,6 +559,7 @@ function removeRegPhoto(idx) {
   renderRegPhotoPreviews();
 }
 
+// 인증
 async function verifyPlace(isVisited) {
   if (!currentPlace) return;
   const field = isVisited ? 'verify_yes' : 'verify_no';
@@ -543,6 +572,7 @@ async function verifyPlace(isVisited) {
   } catch(e) { showToast('잠시 후 다시 시도해주세요'); }
 }
 
+// 리뷰
 function openReview() {
   if (!currentPlace) return;
   reviewRating=0;
@@ -567,6 +597,7 @@ async function submitReview() {
   showLoading(false);
 }
 
+// 태그
 function openTagAdd() {
   if (!currentPlace) return;
   const cur = currentPlace.tags||[];
@@ -589,6 +620,7 @@ async function submitTags() {
   showLoading(false);
 }
 
+// 등록 모달
 function openRegister() {
   selectedNearbyPlace=null; selectedLocTab='nearby'; regPhotos=[];
   document.getElementById('register-modal').classList.add('open');
@@ -651,10 +683,12 @@ async function loadNearbyPlaces() {
         lat=pos.coords.latitude; lng=pos.coords.longitude; res();
       }, res, {timeout:5000}));
     }
+    // 반경 2km 내 수유실 필터
     const nearby = allPlaces.filter(p => {
       const d = Math.sqrt(Math.pow((p.latitude-lat)*111,2)+Math.pow((p.longitude-lng)*88,2));
       return d < 2;
     }).slice(0, 20);
+
     const listEl = document.getElementById('nearby-list');
     if (nearby.length === 0) {
       listEl.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text-muted)">주변 2km 내 수유실이 없어요.<br>신규 등록 탭을 이용해주세요!</div>';
@@ -688,8 +722,10 @@ function setRating(val) {
 async function submitPlace() {
   const tags = [...document.querySelectorAll('#register-tags .tag-item.selected')].map(el=>el.dataset.tag);
   const review = document.getElementById('f-review').value.trim();
+
   showLoading(true);
   try {
+    // 사진 업로드
     const photoUrls = [];
     for (const file of regPhotos) {
       const ext = file.name.split('.').pop();
@@ -700,7 +736,9 @@ async function submitPlace() {
         photoUrls.push(data.publicUrl);
       }
     }
+
     if (selectedLocTab === 'nearby' && selectedNearbyPlace) {
+      // 기존 수유실에 정보 추가
       const mergedTags = [...new Set([...(selectedNearbyPlace.tags||[]), ...tags])];
       await db.from('nursing_room').update({
         tags: mergedTags,
@@ -735,7 +773,9 @@ async function submitPlace() {
   showLoading(false);
 }
 
+// 검색
 function setupSearch() {
+  const geocoder = new kakao.maps.services.Geocoder();
   const ps = new kakao.maps.services.Places();
   document.getElementById('search-input').addEventListener('input', e => {
     const q = e.target.value.trim().toLowerCase();
@@ -756,6 +796,7 @@ function setupSearch() {
       kakao.maps.event.addListener(marker, 'click', () => showDetail(p));
       markers.push(marker);
     });
+    // 결과가 없으면 카카오 장소 검색으로 지도 이동
     if (!found.length && q.length > 1) {
       ps.keywordSearch(q, (result, status) => {
         if (status === kakao.maps.services.Status.OK && result.length > 0) {
@@ -767,6 +808,7 @@ function setupSearch() {
   });
 }
 
+// 필터 (중복 선택)
 function setupFilters() {
   document.querySelectorAll('.filter-chip').forEach(btn => {
     btn.addEventListener('click', () => {
