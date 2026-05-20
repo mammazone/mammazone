@@ -480,28 +480,37 @@ function initMap(){
 
 // ── 카카오 로그인 (JS SDK) ──
 function checkKakaoLogin(){
+  // 카카오 로그인 후 리다이렉트 code 처리
+  const params=new URLSearchParams(window.location.search);
+  const code=params.get('code');
+  if(code){
+    window.history.replaceState({},'','/');
+    fetchKakaoUserByCode(code);
+    return;
+  }
   const saved=localStorage.getItem('mammazone_user');
   if(saved){currentUser=JSON.parse(saved);updateUserUI();}
 }
+
+async function fetchKakaoUserByCode(code){
+  showLoading(true);
+  try{
+    // Vercel serverless function으로 토큰 교환
+    const res=await fetch(`/api/kakao-token?code=${code}`);
+    const data=await res.json();
+    if(data.id){
+      currentUser={id:data.id,name:data.name||'사용자',avatar:data.avatar||''};
+      localStorage.setItem('mammazone_user',JSON.stringify(currentUser));
+      updateUserUI();
+      showToast(`${currentUser.name}님 환영해요! 🍼`);
+    }
+  }catch(e){showToast('로그인 중 오류가 발생했어요');}
+  showLoading(false);
+}
 function kakaoLogin(){
-  Kakao.Auth.login({
-    success(authObj){
-      Kakao.API.request({
-        url:'/v2/user/me',
-        success(res){
-          currentUser={
-            id:res.id,
-            name:res.kakao_account?.profile?.nickname||res.properties?.nickname||'사용자',
-            avatar:res.kakao_account?.profile?.thumbnail_image_url||res.properties?.thumbnail_image||'',
-          };
-          localStorage.setItem('mammazone_user',JSON.stringify(currentUser));
-          updateUserUI();
-          showToast(`${currentUser.name}님 환영해요! 🍼`);
-        },
-        fail(err){showToast('사용자 정보를 가져올 수 없어요');}
-      });
-    },
-    fail(err){showToast('로그인에 실패했어요');}
+  Kakao.Auth.authorize({
+    redirectUri: 'https://mammazone.vercel.app',
+    throughTalk: false,
   });
 }
 function updateUserUI(){
